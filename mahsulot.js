@@ -58,6 +58,7 @@ function render(){
         ${p.desc ? `<p class="pd-desc">${esc(p.desc)}</p>` : ""}
         <dl class="mk-kv pd-kv">
           <dt>${esc(t("pd_company"))}</dt><dd><b>${esc(c.name)}</b></dd>
+          ${c.bizId ? `<dt>Business ID</dt><dd><a class="pd-bizid" href="biznes-id.html?id=${encodeURIComponent(c.bizId)}">${esc(c.bizId)}</a></dd>` : ""}
           ${c.sector ? `<dt>${esc(t("pd_sector"))}</dt><dd>${esc(c.sector)}</dd>` : ""}
           ${assoc ? `<dt>${esc(t("pd_assoc"))}</dt><dd>${esc(assoc)}</dd>` : ""}
           ${c.chairman ? `<dt>${esc(t("pd_chairman"))}</dt><dd>${esc(c.chairman)}</dd>` : ""}
@@ -66,6 +67,7 @@ function render(){
         <div class="mk-actions">
           <a class="btn btn-primary btn-lg" href="#pdContact">${esc(t("pd_contact_cta"))}</a>
           <a class="btn btn-ghost" href="showroom.html?company=${encodeURIComponent(c.name)}">${esc(t("pd_all_products"))}</a>
+          ${c.bizId ? `<a class="btn btn-ghost" href="biznes-id.html?id=${encodeURIComponent(c.bizId)}">Business ID</a>` : ""}
         </div>
       </div>
     </div>

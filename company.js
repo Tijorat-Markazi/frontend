@@ -12,6 +12,8 @@ try{ creds = JSON.parse(sessionStorage.getItem("kg_co")||"null"); }catch(e){ cre
 
 /* ---- translations ---- */
 const OT = {
+  nav_bizid:["Business ID","Business ID","Business ID"],
+  nav_legal:["Ma'lumotlarim va huquqlarim","Мои данные и права","My data and rights"],
   lg_title:["Kompaniya paneli","Панель компании","Company panel"],
   lg_sub:["Login va parol bilan kiring (admin bergan).","Войдите по логину и паролю (выданы админом).","Sign in with the login/password issued by the admin."],
   lg_btn:["Kirish →","Войти →","Sign in →"],
@@ -233,6 +235,7 @@ const NAV=[
   {s:"bizdata",k:"nav_data",ic:svg('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v4h6V3"/><path d="M8 12h8M8 16h8"/>')},
   {s:"news",k:"nav_news",ic:svg('<path d="M4 4h13a1 1 0 0 1 1 1v13a2 2 0 0 0 2-2V7"/><path d="M4 4a1 1 0 0 0-1 1v13a2 2 0 0 0 2 2h13"/><path d="M7 8h7M7 12h7M7 16h4"/>')},
   {s:"inquiries",k:"nav_inquiries",badge:"inq",ic:svg('<path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M22 7l-10 6L2 7"/>')},
+  {s:"bizid",k:"nav_bizid",ic:svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17c.6-1.8 2-2.6 3.5-2.6s2.9.8 3.5 2.6"/><path d="M15 9h4M15 13h4"/>')},
   /* One Chats entry, like the association cabinet: a full-screen page whose
      room list holds both the association group and the admin conversation. */
   {k:"nav_chats",href:"chat.html",ic:svg('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')},
@@ -240,8 +243,10 @@ const NAV=[
   {s:"service",k:"nav_service",ic:svg('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>')},
   {s:"rnd",k:"nav_rnd",ic:svg('<path d="M9 2h6M10 2v6L5 19a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1L14 8V2"/><path d="M7 15h10"/>')},
   {s:"gov",k:"nav_gov",ic:svg('<path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M12 3l9 5H3z"/>')},
+  /* The rights under modda 21-22 ZRU-547 live where the account lives. */
+  {s:"legal",k:"nav_legal",ic:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.1A1.7 1.7 0 0 0 6 19.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.4 13H4a2 2 0 0 1 0-4h.1A1.7 1.7 0 0 0 5.3 6L5.2 6a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 11 4.4V4a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V11a2 2 0 0 1 0 4h-.1z"/>')},
 ];
-const VIEW_TITLE={dashboard:"nav_dash",showroom:"nav_show",invest:"nav_invest",bizdata:"nav_data",news:"nav_news",inquiries:"nav_inquiries",meeting:"nav_meeting",rnd:"nav_rnd",service:"nav_service",gov:"nav_gov"};
+const VIEW_TITLE={legal:"nav_legal",bizid:"nav_bizid",dashboard:"nav_dash",showroom:"nav_show",invest:"nav_invest",bizdata:"nav_data",news:"nav_news",inquiries:"nav_inquiries",meeting:"nav_meeting",rnd:"nav_rnd",service:"nav_service",gov:"nav_gov"};
 function buildNav(){
   const nav=$("#coNav"); nav.innerHTML="";
   NAV.forEach(n=>{
@@ -269,6 +274,10 @@ function showSection(sec){
   if(sec==="rnd") loadModule("rnd");
   if(sec==="service") loadModule("service");
   if(sec==="gov") renderGov();
+  if(sec==="bizid") BizIdPanel.mount($("#bizidHost"), creds);
+  if(sec==="legal") LegalPanel.mount($("#legalHost"), {
+    creds: () => creds, panelClass: "panel co-panel", profileHref: "company.html",
+    onWithdrawn: () => { sessionStorage.removeItem("kg_co"); location.href = "index.html"; } });
 }
 
 /* ============================================================
@@ -379,7 +388,7 @@ $("#shForm").addEventListener("submit",async e=>{e.preventDefault();
   let img=$("#sh-img").value.trim();
   if(file){
     btn.disabled=true; const old=btn.textContent; btn.textContent=ot("sh_uploading");
-    try{ img=await uploadFile(file); }catch(err){ alert("Upload error"); }
+    try{ img=await uploadFile(file); }catch(err){ UI.alert("Upload error"); }
     btn.disabled=false; btn.textContent=old;
   }
   company.showroom=company.showroom||[];
@@ -616,7 +625,7 @@ document.addEventListener("click", async e => {
   btn.disabled = true;
   const r = await inqApi("/api/bozor/inquiry/reply", body);
   btn.disabled = false;
-  if(r.failed || !r.ok) alert(ot("iq_fail"));
+  if(r.failed || !r.ok) UI.alert(ot("iq_fail"));
   renderInquiries();
 });
 

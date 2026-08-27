@@ -83,6 +83,16 @@
            at 60fps. Fixing the configuration makes `over` a pure function of
            the viewport and the labels. */
         quietly(() => { toBar(); header.classList.remove("is-compact"); });
+
+        /* One read, and it is a true one: the signed-in header really did
+           overflow. Carrying a second button (Chiqish) put the row —
+           wordmark, six links, both buttons — a couple of pixels past the
+           1200px content container, so this correctly reported "does not
+           fit" and correctly collapsed to a burger, at every screen size,
+           because a wider monitor does not widen a capped container.
+           The fix is in the stylesheet: the header now runs on a 1320px
+           track of its own. Shrinking the type instead would have left the
+           bar a different size on different pages. */
         const over = inner.scrollWidth > inner.clientWidth + 1;
         header.classList.toggle("is-compact", over);
       }

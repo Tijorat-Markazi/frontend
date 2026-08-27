@@ -296,7 +296,7 @@ async function download(kind){
   const r = await fetch("/api/analyst/export", { method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(Object.assign({}, creds || {}, { days: DAYS, kind })) });
-  if(!r.ok) return alert(t("an_fail"));
+  if(!r.ok) return UI.alert(t("an_fail"));
   const blob = await r.blob();
   const cd = r.headers.get("Content-Disposition") || "";
   const m = cd.match(/filename="([^"]+)"/);

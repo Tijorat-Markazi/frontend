@@ -48,16 +48,23 @@ function render(filter=""){
   });
   const grid=$("#dirGrid");
   if(!list.length){ grid.innerHTML=`<p class="empty-state">${dt("none")}</p>`; return; }
+  /* The card opens the association itself. Its Business ID is a separate
+     control, and it has to live OUTSIDE the card's <a> — an anchor inside
+     an anchor is invalid and browsers unnest it — so it is overlaid. */
   grid.innerHTML=list.map(a=>`
-    <a class="dir-card" href="association.html?id=${encodeURIComponent(a.id)}">
-      <span class="dir-mark">${esc(aName(a).charAt(0).toUpperCase())}</span>
-      <span class="dir-body">
-        <b>${esc(aName(a))}</b>
-        ${a.chairman?`<em>${dt("chair")}: ${esc(a.chairman)}</em>`:`<em>&nbsp;</em>`}
-        <span class="dir-count">${a.companies} ${dt("companies")}</span>
-      </span>
-      <span class="dir-open">${dt("open")}</span>
-    </a>`).join("");
+    <div class="dir-item">
+      <a class="dir-card" href="association.html?id=${encodeURIComponent(a.id)}">
+        <span class="dir-mark">${esc(aName(a).charAt(0).toUpperCase())}</span>
+        <span class="dir-body">
+          <b>${esc(aName(a))}</b>
+          ${a.chairman?`<em>${dt("chair")}: ${esc(a.chairman)}</em>`:`<em>&nbsp;</em>`}
+          <span class="dir-count">${a.companies} ${dt("companies")}</span>
+        </span>
+        <span class="dir-open">${dt("open")}</span>
+      </a>
+      ${a.bizId?`<a class="dir-bizbtn" href="biznes-id.html?id=${encodeURIComponent(a.bizId)}"
+        title="Business ID">${esc(a.bizId)}</a>`:""}
+    </div>`).join("");
 }
 
 function applyStatic(){

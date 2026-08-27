@@ -422,7 +422,7 @@ function wireSeller(){
   $("#bzSeller").addEventListener("click", async e => {
     const del = e.target.closest("[data-del]");
     if(del){
-      if(!confirm(t("bz_confirm_del"))) return;
+      if(!await UI.confirm(t("bz_confirm_del"), { tone:"danger" })) return;
       await api("/api/bozor/product/delete", ident.co({ id: del.dataset.del }));
       return renderSeller();
     }

@@ -693,7 +693,7 @@ const T_REGISTER = Object.assign({}, T_MK, {
   rg_login_note: ["Bu login va parol bilan tasdiqlangandan keyin kabinetga kirasiz. Parolni hech kimga aytmang.","С этим логином и паролем вы войдёте в кабинет после одобрения. Никому не сообщайте пароль.","You will sign in with this login and password once approved. Never share the password."],
   rg_login_hint: ["Kamida 3 belgi: kichik harflar, raqam, . _ -","Минимум 3 символа: строчные буквы, цифры, . _ -","At least 3 characters: lower-case letters, digits, . _ -"],
   rg_pass_hint: ["Kamida 8 belgi.","Минимум 8 символов.","At least 8 characters."],
-  rg_consent: ["Ma'lumotlarim tanlangan uyushma va platforma administratoriga ko'rib chiqish uchun uzatilishiga roziman.","Согласен(на) на передачу данных выбранной ассоциации и администратору платформы для рассмотрения.","I agree that my details are passed to the chosen association and the platform administrator for review."],
+  rg_consent: ["Men <a href=\"oferta.html\" target=\"_blank\">Ommaviy oferta</a> va <a href=\"maxfiylik.html\" target=\"_blank\">Maxfiylik siyosati</a> bilan tanishdim. Familiyam, ismim, lavozimim, elektron pochtam va telefon raqamim ariza ko'rib chiqilishi va kabinet ochilishi uchun tanlangan uyushmaga hamda Platforma operatoriga uzatilishiga roziman. Rozilikni istalgan vaqtda qaytarib olishim mumkin.","Я ознакомился(лась) с <a href=\"oferta.html\" target=\"_blank\">Публичной офертой</a> и <a href=\"maxfiylik.html\" target=\"_blank\">Политикой конфиденциальности</a>. Соглашаюсь на передачу фамилии, имени, должности, электронной почты и телефона выбранной ассоциации и оператору Платформы для рассмотрения заявки и открытия кабинета. Согласие может быть отозвано в любое время.","I have read the <a href=\"oferta.html\" target=\"_blank\">Public offer</a> and the <a href=\"maxfiylik.html\" target=\"_blank\">Privacy policy</a>. I consent to my name, job title, e-mail and telephone number being passed to the chosen association and to the Platform operator in order to review the application and open a cabinet. I may withdraw this consent at any time."],
   rg_send: ["Arizani yuborish","Отправить заявку","Send the application"],
 
   rg_e_name: ["Kompaniya nomini kiriting.","Укажите название компании.","Enter the company name."],
@@ -707,6 +707,11 @@ const T_REGISTER = Object.assign({}, T_MK, {
   rg_e_taken: ["Bu login band. Boshqasini tanlang.","Этот логин занят. Выберите другой.","That login is taken. Choose another."],
   rg_e_many: ["Bu email bo'yicha juda ko'p ariza kutilmoqda.","По этому email слишком много заявок в ожидании.","Too many pending applications for this e-mail."],
   rg_e_generic: ["Arizani yuborib bo'lmadi. Qayta urinib ko'ring.","Не удалось отправить заявку. Попробуйте ещё раз.","Could not send the application. Try again."],
+  /* Transport failures, told apart from validation failures. "Try again" is
+     the wrong advice when the request never reached a working endpoint — it
+     invites the applicant to retype the whole form to no effect. */
+  rg_e_offline: ["Serverga ulanib bo'lmadi. Aloqangizni tekshirib, qayta urinib ko'ring.","Не удалось связаться с сервером. Проверьте соединение и повторите.","Could not reach the server. Check your connection and try again."],
+  rg_e_unavailable: ["Server bu so'rovni qabul qilmadi. Sahifani yangilang — muammo saqlanib qolsa, administratorga xabar bering.","Сервер не принял этот запрос. Обновите страницу — если это повторится, сообщите администратору.","The server did not accept this request. Reload the page — if it keeps happening, tell the administrator."],
   rg_e_status: ["Ariza raqami va emailni kiriting.","Укажите номер заявки и email.","Enter the reference and the e-mail."],
   rg_e_notfound: ["Bunday ariza topilmadi. Raqam va emailni tekshiring.","Заявка не найдена. Проверьте номер и email.","No such application. Check the reference and the e-mail."],
 
@@ -726,6 +731,8 @@ const T_REGISTER = Object.assign({}, T_MK, {
   rg_sent: ["Yuborilgan","Отправлена","Sent"],
   rg_decided: ["Qaror sanasi","Дата решения","Decided"],
   rg_reason: ["Sabab","Причина","Reason"],
+  rg_buyer_q: ["Sotib olmoqchimisiz?","Хотите закупать?","Here to buy instead?"],
+  rg_buyer_go: ["Xaridor sifatida ro'yxatdan o'tish →","Регистрация покупателя →","Register as a buyer →"],
   rg_go_cabinet: ["Kabinetga kirish →","Войти в кабинет →","Go to your cabinet →"],
 });
 
@@ -846,3 +853,241 @@ const T_ANALYST = {
   an_dl_xlsx: ["Excel (.xlsx)","Excel (.xlsx)","Excel (.xlsx)"],
   an_dl_doc: ["Word (.doc)","Word (.doc)","Word (.doc)"],
 };
+
+/* ============================================================
+   BUSINESS ID — the public identity card
+   ============================================================ */
+const T_BIZID = Object.assign({}, T_MK, {
+  bid_title:      ["Business ID","Business ID","Business ID"],
+  bid_lead:       ["Platformadagi har bir uyushma va korxonaning rasmiy raqami, kartasi va QR kodi.","Официальный номер, карточка и QR-код каждой ассоциации и компании платформы.","The official number, card and QR code of every association and company on the platform."],
+  bid_assoc:      ["Uyushma","Ассоциация","Association"],
+  bid_company:    ["Korxona","Компания","Company"],
+  bid_number:     ["ID raqami","ID номер","ID number"],
+  bid_since:      ["Ro'yxatdan o'tgan","Зарегистрирован","Registered"],
+  bid_chairman:   ["Rais","Председатель","Chair"],
+  bid_sector:     ["Soha","Отрасль","Sector"],
+  bid_member_of:  ["Uyushma","Ассоциация","Association"],
+  bid_contact:    ["Bog'lanish","Контакты","Contact"],
+  bid_phone:      ["Telefon","Телефон","Phone"],
+  bid_email:      ["E-pochta","E-mail","Email"],
+  bid_location:   ["Manzil","Адрес","Location"],
+  bid_website:    ["Veb-sayt","Веб-сайт","Website"],
+  bid_no_contact: ["Bu tashkilot hali bog'lanish ma'lumotlarini kiritmagan.","Эта организация ещё не указала контактные данные.","This organisation has not published contact details yet."],
+  bid_members:    ["A'zo korxonalar","Компании-члены","Member companies"],
+  bid_products:   ["Mahsulotlar","Товары","Products"],
+  bid_showroom:   ["Showroom","Showroom","Showroom"],
+  bid_no_members: ["Bu uyushmada hali korxonalar yo'q.","В этой ассоциации пока нет компаний.","This association has no member companies yet."],
+  bid_no_products:["Bu korxona hali mahsulot joylamagan.","Эта компания пока не разместила товары.","This company has not listed any products yet."],
+  bid_scan:       ["Kartani ochish uchun skanerlang","Отсканируйте, чтобы открыть карточку","Scan to open this card"],
+  bid_print:      ["Kartani chop etish","Печать карточки","Print card"],
+  bid_copy:       ["Havolani nusxalash","Копировать ссылку","Copy link"],
+  bid_copied:     ["Havola nusxalandi","Ссылка скопирована","Link copied"],
+  bid_missing:    ["ID raqami ko'rsatilmagan.","ID номер не указан.","No ID number given."],
+  bid_notfound:   ["Bunday ID raqami topilmadi.","Такой ID номер не найден.","No such ID number was found."],
+  bid_lookup:     ["ID raqamini tekshirish","Проверка ID номера","Verify an ID number"],
+  bid_lookup_lead:["Raqamni kiriting — u haqiqiyligini va kimga tegishli ekanini ko'rsatamiz.","Введите номер — покажем, подлинный ли он и кому принадлежит.","Enter a number and we'll show whether it's genuine and who holds it."],
+  bid_lookup_ph:  ["C000042","C000042","C000042"],
+  bid_check:      ["Tekshirish","Проверить","Verify"],
+  bid_valid:      ["Haqiqiy ID raqami","Подлинный ID номер","Genuine ID number"],
+  bid_malformed:  ["Bu raqam noto'g'ri tuzilgan — tekshiruv harfi mos kelmadi. Uni qaytadan kiriting.","Номер составлен неверно — контрольная буква не совпала. Проверьте ввод.","That number is malformed — the check letter doesn't match. Please re-enter it."],
+  bid_unknown:    ["Raqam to'g'ri tuzilgan, lekin platformada bunday egasi yo'q.","Номер составлен верно, но такого владельца на платформе нет.","The number is well-formed, but no one on the platform holds it."],
+  bid_open_card:  ["Kartani ochish","Открыть карточку","Open card"],
+  bid_directory:  ["Barcha kartalar","Все карточки","All cards"],
+  bid_f_all:      ["Barchasi","Все","All"],
+  bid_f_assocs:   ["Uyushmalar","Ассоциации","Associations"],
+  bid_f_companies:["Korxonalar","Компании","Companies"],
+  bid_count:      ["{n} ta karta","Карточек: {n}","{n} cards"],
+  bid_search_ph:  ["Nomi yoki ID raqami bo'yicha qidirish","Поиск по названию или ID номеру","Search by name or ID number"],
+  bid_nothing:    ["Hech narsa topilmadi.","Ничего не найдено.","Nothing found."],
+  bid_view:       ["Business ID","Business ID","Business ID"],
+  bid_official:   ["TIJORAT MARKAZI rasmiy hujjati","Официальный документ TIJORAT MARKAZI","Official TIJORAT MARKAZI document"],
+});
+
+/* ---- the contact editor shown inside the cabinets ---- */
+const T_BIZID_EDIT = {
+  bide_title:   ["Business ID — bog'lanish ma'lumotlari","Business ID — контактные данные","Business ID — contact details"],
+  bide_lead:    ["Bu ma'lumotlar sizning ochiq kartangizda ko'rinadi.","Эти данные видны на вашей публичной карточке.","These details appear on your public card."],
+  bide_phone:   ["Telefon","Телефон","Phone"],
+  bide_email:   ["E-pochta","E-mail","Email"],
+  bide_location:["Manzil","Адрес","Location"],
+  bide_website: ["Veb-sayt","Веб-сайт","Website"],
+  bide_save:    ["Saqlash","Сохранить","Save"],
+  bide_saved:   ["Saqlandi","Сохранено","Saved"],
+  bide_view:    ["Kartani ko'rish","Посмотреть карточку","View card"],
+  bide_fail:    ["Saqlab bo'lmadi.","Не удалось сохранить.","Could not save."],
+  bide_email_invalid:  ["E-pochta manzili noto'g'ri.","Неверный адрес e-mail.","That email address is not valid."],
+  bide_phone_invalid:  ["Telefon raqami noto'g'ri.","Неверный номер телефона.","That phone number is not valid."],
+  bide_website_invalid:["Veb-sayt manzili noto'g'ri.","Неверный адрес сайта.","That website address is not valid."],
+};
+
+/* ============================================================
+   KORXONA — a company's own public page
+   ============================================================ */
+const T_KORXONA = Object.assign({}, T_MK, {
+  ko_notfound:  ["Bunday korxona topilmadi.","Такая компания не найдена.","No such company was found."],
+  ko_missing:   ["Korxona ko'rsatilmagan.","Компания не указана.","No company specified."],
+  ko_sector:    ["Soha","Отрасль","Sector"],
+  ko_assoc:     ["Uyushma","Ассоциация","Association"],
+  ko_chairman:  ["Uyushma raisi","Председатель ассоциации","Association chair"],
+  ko_since:     ["Platformada","На платформе","On the platform"],
+  ko_products:  ["Mahsulotlar","Товары","Products"],
+  ko_bizid:     ["Business ID","Business ID","Business ID"],
+  ko_bizid_sub: ["Rasmiy karta, bog'lanish ma'lumotlari va QR kod","Официальная карточка, контакты и QR-код","The official card, contact details and QR code"],
+  ko_empty:     ["Bu korxona hali showroomga mahsulot joylamagan.","Эта компания пока не разместила товары в showroom.","This company has not listed anything in the showroom yet."],
+  ko_all:       ["Showroomda ko'rish","Смотреть в showroom","View in the showroom"],
+  ko_assoc_page:["Uyushma sahifasi","Страница ассоциации","Association page"],
+  ko_back:      ["← Uyushmalar","← Ассоциации","← Associations"],
+});
+
+
+/* ============================================================
+   XARIDOR — buyer registration
+
+   Same queue, same reference, same status checker as the company
+   application, so everything identical is inherited rather than
+   retyped. Only what genuinely differs is overridden below: who
+   reviews it (oversight, not an association), what is asked for
+   (a company NUMBER, and no sector body to belong to), and what
+   opens at the end of it.
+   ============================================================ */
+const T_BREG = Object.assign({}, T_REGISTER, {
+  br_eyebrow:   ["XARIDOR RO'YXATI","РЕГИСТРАЦИЯ ПОКУПАТЕЛЯ","BUYER REGISTRATION"],
+  br_h1:        ["Xaridor sifatida <span class=\"mk-hl\">ro'yxatdan o'ting</span>","Зарегистрируйтесь <span class=\"mk-hl\">как покупатель</span>","Register as a <span class=\"mk-hl\">buyer</span>"],
+  br_lead:      ["Arizani to'ldiring — platforma administratori uni ko'rib chiqadi. Tasdiqlangach xaridor kabineti ochiladi: B2B katalog, narx so'rovlari, takliflarni taqqoslash va buyurtmalarni kuzatish.","Заполните заявку — её рассмотрит администратор платформы. После одобрения откроется кабинет покупателя: каталог B2B, запросы цен, сравнение предложений и отслеживание заказов.","Fill in the application — the platform administrator reviews it. Once approved your buyer cabinet opens: the B2B catalogue, price requests, quote comparison and order tracking."],
+  br_s1:        ["Ariza topshirasiz","Подаёте заявку","You apply"],
+  br_s2:        ["Administrator ko'rib chiqadi","Администратор рассматривает","The administrator reviews"],
+  br_s3:        ["Xaridor kabineti ochiladi","Открывается кабинет покупателя","Your buyer cabinet opens"],
+  br_seller_q:  ["Mahsulot sotmoqchimisiz?","Хотите продавать?","Want to sell instead?"],
+  br_seller_go: ["Korxona sifatida ro'yxatdan o'tish →","Регистрация компании →","Register as a company →"],
+
+  br_form_h:     ["Xaridor arizasi","Заявка покупателя","Buyer application"],
+  br_leg_company:["Xaridor tashkilot","Организация-покупатель","The buying organisation"],
+  br_f_name:     ["Kompaniya nomi *","Название компании *","Company name *"],
+  br_f_phone:    ["Kompaniya telefon raqami *","Телефон компании *","Company phone number *"],
+  br_l_company:  ["Kompaniya","Компания","Company"],
+  br_ph_phone:   ["+998 71 200 00 00","+998 71 200 00 00","+998 71 200 00 00"],
+  br_hint_phone: ["Tashkilotning rasmiy raqami — mas'ul shaxsning shaxsiy raqami emas.","Официальный номер организации, а не личный номер сотрудника.","The organisation's own line, not the contact person's mobile."],
+  br_f_cphone:   ["Mas'ul shaxs telefoni","Телефон ответственного лица","Contact person's phone"],
+  br_f_about:    ["Nima sotib olasiz? Qisqacha yozing","Что вы закупаете? Кратко","What do you buy? Briefly"],
+  br_consent:    ["Men <a href=\"oferta.html\" target=\"_blank\">Ommaviy oferta</a> va <a href=\"maxfiylik.html\" target=\"_blank\">Maxfiylik siyosati</a> bilan tanishdim. Familiyam, ismim, lavozimim, elektron pochtam va telefon raqamim ariza ko'rib chiqilishi va kabinet ochilishi uchun Platforma operatoriga uzatilishiga roziman. Rozilikni istalgan vaqtda qaytarib olishim mumkin.","Я ознакомился(лась) с <a href=\"oferta.html\" target=\"_blank\">Публичной офертой</a> и <a href=\"maxfiylik.html\" target=\"_blank\">Политикой конфиденциальности</a>. Соглашаюсь на передачу фамилии, имени, должности, электронной почты и телефона оператору Платформы для рассмотрения заявки и открытия кабинета. Согласие может быть отозвано в любое время.","I have read the <a href=\"oferta.html\" target=\"_blank\">Public offer</a> and the <a href=\"maxfiylik.html\" target=\"_blank\">Privacy policy</a>. I consent to my name, job title, e-mail and telephone number being passed to the Platform operator in order to review the application and open a cabinet. I may withdraw this consent at any time."],
+  br_send:       ["Arizani yuborish","Отправить заявку","Send the application"],
+
+  br_e_phone:    ["Kompaniya telefon raqamini kiriting.","Укажите телефон компании.","Enter the company phone number."],
+  br_done_p:     ["Platforma administratori uni ko'rib chiqadi. Javob emailingizga yuboriladi.","Администратор платформы рассмотрит её. Ответ придёт на вашу почту.","The platform administrator will review it. The answer comes to your e-mail."],
+  br_go_cabinet: ["Xaridor kabinetiga kirish →","Войти в кабинет покупателя →","Go to your buyer cabinet →"],
+
+  br_why_h:      ["Kabinet nima beradi","Что даёт кабинет","What the cabinet gives you"],
+  br_why_1:      ["B2B katalog — faqat biznesga sotiladigan mahsulotlar.","Каталог B2B — только товары для бизнеса.","The B2B catalogue — only what is sold business-to-business."],
+  br_why_2:      ["Narx so'rovi — bitta so'rov, bir nechta taklif.","Запрос цены — один запрос, несколько предложений.","One price request, many offers back."],
+  br_why_3:      ["Takliflarni yonma-yon taqqoslash.","Сравнение предложений рядом.","Offers compared side by side."],
+  br_why_4:      ["Buyurtma holatini bosqichma-bosqich kuzatish.","Отслеживание статуса заказа по этапам.","Order state tracked stage by stage."],
+});
+
+/* ============================================================
+   XARIDOR — the buyer cabinet
+   ============================================================ */
+const T_XARIDOR = Object.assign({}, T_MK, {
+  xr_brand:      ["Xaridor","Покупатель","Buyer"],
+  xr_login_h:    ["Xaridor kabineti","Кабинет покупателя","Buyer cabinet"],
+  xr_login_sub:  ["Login va parol bilan kiring. Hisob ariza tasdiqlangandan keyin ochiladi.","Войдите по логину и паролю. Учётная запись создаётся после одобрения заявки.","Sign in with your login and password. The account is created once your application is approved."],
+  xr_login_btn:  ["Kirish →","Войти →","Sign in →"],
+  xr_login_err:  ["Login yoki parol noto'g'ri.","Неверный логин или пароль.","Wrong login or password."],
+  xr_no_account: ["Hisobingiz yo'qmi? Ariza topshiring","Нет аккаунта? Подайте заявку","No account yet? Apply"],
+  xr_back_site:  ["← Saytga qaytish","← Вернуться на сайт","← Back to the site"],
+  xr_b2b_note:   ["Bu kabinet faqat B2B kanalida ishlaydi.","Этот кабинет работает только в канале B2B.","This cabinet works on the B2B channel only."],
+  xr_logout:     ["Chiqish","Выйти","Log out"],
+
+  xr_v_catalog:  ["Katalog","Каталог","Catalogue"],
+  xr_v_rfq:      ["Narx so'rovlari","Запросы цен","Price requests"],
+  xr_v_orders:   ["Buyurtmalar","Заказы","Orders"],
+  xr_v_threads:  ["Yozishmalar","Переписка","Messages"],
+  xr_v_profile:  ["Profil","Профиль","Profile"],
+  xr_v_legal:    ["Ma'lumotlarim va huquqlarim","Мои данные и права","My data and rights"],
+
+  xr_search_ph:  ["Mahsulot, kategoriya yoki brend…","Товар, категория или бренд…","Product, category or brand…"],
+  xr_search:     ["Qidirish","Искать","Search"],
+  xr_f_region:   ["Hudud","Регион","Region"],
+  xr_f_maxlead:  ["Maks. muddat (kun)","Макс. срок (дней)","Max lead time (days)"],
+  xr_f_maxmoq:   ["Maks. partiya","Макс. партия","Max MOQ"],
+  xr_f_cert:     ["Sertifikatli","С сертификатом","Certified only"],
+  xr_reset:      ["Tozalash","Сбросить","Clear"],
+  xr_found:      ["{n} ta mahsulot","Найдено: {n}","{n} products"],
+  xr_cat_empty:  ["Bu shartlarga mos mahsulot topilmadi.","По этим условиям ничего не найдено.","Nothing matches those filters."],
+  xr_moq:        ["Min. partiya","Мин. партия","MOQ"],
+  xr_lead:       ["Yetkazish","Срок поставки","Lead time"],
+  xr_days:       ["kun","дн.","days"],
+  xr_seller:     ["Sotuvchi","Продавец","Seller"],
+  xr_ask:        ["So'rov yuborish","Запросить","Ask the seller"],
+  xr_save:       ["Saqlash","Сохранить","Save"],
+  xr_saved_on:   ["Saqlangan ✓","Сохранено ✓","Saved ✓"],
+
+  xr_ask_h:      ["Sotuvchiga savol","Вопрос продавцу","Ask the seller"],
+  xr_ask_qty:    ["Kerakli miqdor","Нужное количество","Quantity needed"],
+  xr_ask_msg:    ["Savolingiz *","Ваш вопрос *","Your question *"],
+  xr_ask_send:   ["Yuborish","Отправить","Send"],
+  xr_ask_ok:     ["So'rov yuborildi. Javob «Yozishmalar» bo'limida ko'rinadi.","Запрос отправлен. Ответ появится в разделе «Переписка».","Sent. The reply appears under Messages."],
+  xr_ask_empty:  ["Savolni yozing.","Напишите вопрос.","Write your question."],
+
+  xr_rfq_new:    ["Yangi narx so'rovi","Новый запрос цены","New price request"],
+  xr_rfq_sub:    ["Bitta so'rov — mos keluvchi barcha sotuvchilarga ko'rinadi.","Один запрос виден всем подходящим продавцам.","One request, visible to every matching seller."],
+  xr_rfq_title:  ["Nima kerak? *","Что нужно? *","What do you need? *"],
+  xr_rfq_spec:   ["Texnik talablar","Технические требования","Specification"],
+  xr_rfq_cat:    ["Kategoriya","Категория","Category"],
+  xr_rfq_qty:    ["Miqdor","Количество","Quantity"],
+  xr_rfq_unit:   ["O'lchov","Ед. изм.","Unit"],
+  xr_rfq_budget: ["Byudjet","Бюджет","Budget"],
+  xr_rfq_cur:    ["Valyuta","Валюта","Currency"],
+  xr_rfq_region: ["Hudud","Регион","Region"],
+  xr_rfq_lead:   ["Maks. yetkazish (kun)","Макс. срок (дней)","Max lead time (days)"],
+  xr_rfq_dl:     ["Javob muddati","Срок ответа","Reply by"],
+  xr_rfq_send:   ["So'rovni e'lon qilish","Опубликовать запрос","Publish the request"],
+  xr_rfq_e_title:["So'rov nomini yozing.","Укажите название запроса.","Give the request a title."],
+  xr_rfq_ok:     ["So'rov e'lon qilindi.","Запрос опубликован.","The request is live."],
+  xr_rfq_empty:  ["Hali narx so'rovi yubormagansiz.","Вы ещё не отправляли запросов.","You have not sent a price request yet."],
+  xr_rfq_offers: ["{n} ta taklif","Предложений: {n}","{n} offers"],
+  xr_rfq_none:   ["Hali taklif yo'q","Предложений пока нет","No offers yet"],
+  xr_rfq_matched:["{n} ta sotuvchi mos keldi","Подходящих продавцов: {n}","{n} matching sellers"],
+  xr_rfq_open:   ["Takliflarni ko'rish","Смотреть предложения","See the offers"],
+
+  xr_q_h:        ["Takliflar","Предложения","Offers"],
+  xr_q_price:    ["Narx","Цена","Price"],
+  xr_q_lead:     ["Muddat","Срок","Lead"],
+  xr_q_valid:    ["Amal qiladi","Действует до","Valid"],
+  xr_q_best_p:   ["Eng arzon","Самое дешёвое","Best price"],
+  xr_q_best_l:   ["Eng tez","Самое быстрое","Fastest"],
+  xr_q_accept:   ["Qabul qilish","Принять","Accept"],
+  xr_q_accept_q: ["Bu taklifni qabul qilasizmi? Buyurtma ochiladi.","Принять это предложение? Откроется заказ.","Accept this offer? An order will be opened."],
+  xr_q_accepted: ["Buyurtma ochildi.","Заказ открыт.","The order is open."],
+  xr_q_terms:    ["Shartlar","Условия","Terms"],
+
+  xr_or_empty:   ["Hali buyurtma yo'q. Taklifni qabul qilsangiz shu yerda paydo bo'ladi.","Заказов пока нет. Примите предложение — заказ появится здесь.","No orders yet. Accept an offer and it appears here."],
+  xr_or_value:   ["Summa","Сумма","Value"],
+  xr_or_stage:   ["Bosqich","Этап","Stage"],
+  xr_or_next:    ["Keyingi qadam","Следующий шаг","Next step"],
+  xr_or_note:    ["Izoh qo'shish","Добавить комментарий","Add a note"],
+  xr_or_send:    ["Saqlash","Сохранить","Save"],
+  xr_or_risks:   ["E'tibor bering","Обратите внимание","Worth checking"],
+  xr_or_saved:   ["Saqlandi ✓","Сохранено ✓","Saved ✓"],
+  xr_th_empty:   ["Hali yozishma yo'q. Katalogdan sotuvchiga savol yuboring.","Переписки пока нет. Задайте вопрос продавцу из каталога.","No threads yet. Ask a seller a question from the catalogue."],
+  xr_th_reply:   ["Javob yozish","Написать","Write back"],
+  xr_th_send:    ["Yuborish","Отправить","Send"],
+  xr_th_waiting: ["Javob kutilmoqda","Ожидает ответа","Waiting for a reply"],
+  xr_th_answered:["Javob berilgan","Отвечено","Answered"],
+  xr_th_closed:  ["Yopilgan","Закрыт","Closed"],
+  xr_th_you:     ["Siz","Вы","You"],
+
+  xr_pr_h:       ["Tashkilot ma'lumotlari","Данные организации","Organisation details"],
+  xr_pr_sub:     ["Sotuvchilar sizni shu ma'lumotlar bilan ko'radi. Login o'zgarmaydi.","Продавцы видят вас по этим данным. Логин не меняется.","Sellers see you by these details. The login cannot change."],
+  xr_pr_save:    ["Saqlash","Сохранить","Save"],
+  xr_pr_saved:   ["Saqlandi ✓","Сохранено ✓","Saved ✓"],
+  xr_pr_login:   ["Login","Логин","Login"],
+  xr_sup_h:      ["Saqlangan ta'minotchilar","Сохранённые поставщики","Saved suppliers"],
+  xr_sup_empty:  ["Ro'yxat bo'sh. Katalogda sotuvchini saqlab qo'ying.","Список пуст. Сохраните продавца в каталоге.","Nothing saved yet. Save a seller from the catalogue."],
+  xr_sup_drop:   ["O'chirish","Убрать","Remove"],
+
+  xr_e_load:     ["Ma'lumotni yuklab bo'lmadi.","Не удалось загрузить данные.","Could not load your cabinet."],
+  xr_e_save:     ["Saqlab bo'lmadi.","Не удалось сохранить.","Could not save."],
+  xr_e_forbidden:["Bunga ruxsat yo'q.","Нет доступа.","You are not allowed to do that."],
+  xr_e_name:     ["Kompaniya nomini kiriting.","Укажите название компании.","Enter the company name."],
+  xr_e_phone:    ["Kompaniya telefon raqamini kiriting.","Укажите телефон компании.","Enter the company phone number."],
+});

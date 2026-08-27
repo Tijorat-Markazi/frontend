@@ -23,9 +23,9 @@
     ki_login:   ["Login","Логин","Login"],
     ki_pass:    ["Parol","Пароль","Password"],
     ki_btn:     ["Kirish →","Войти →","Sign in →"],
-    ki_roles:   ["Bitta oyna — kompaniya, uyushma, tahlilchi va administrator hisoblari uchun.",
-                 "Одно окно — для компаний, ассоциаций, аналитиков и администраторов.",
-                 "One window — for companies, associations, analysts and administrators."],
+    ki_roles:   ["Bitta oyna — kompaniya, xaridor, uyushma, tahlilchi va administrator hisoblari uchun.",
+                 "Одно окно — для компаний, покупателей, ассоциаций, аналитиков и администраторов.",
+                 "One window — for companies, buyers, associations, analysts and administrators."],
     ki_reg:     ["Ro‘yxatdan o‘tish","Регистрация","Register"],
     ki_back:    ["← Saytga qaytish","← Вернуться на сайт","← Back to the site"],
     /* One message for every failure. Saying "no such login" would tell an
@@ -67,6 +67,7 @@
     if((stored("kg_as")||{}).login) return "association.html";
     if((stored("kg_co")||{}).login) return "company.html";
     if((stored("kg_an")||{}).login) return "tahlil.html";
+    if((stored("kg_by")||{}).login) return "xaridor.html";
     return null;
   }
 

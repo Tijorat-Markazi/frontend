@@ -402,7 +402,7 @@ function wireMe(){
       return renderMe();
     }
     if(dec){
-      const reason = prompt(t("hc_decline_reason") + " (salary / skill / location / availability / culture / experience / other)");
+      const reason = await UI.prompt(t("hc_decline_reason") + " (salary / skill / location / availability / culture / experience / other)");
       if(!reason) return;
       await api("/api/mehnat/offer/respond", ident.me({ id: dec.dataset.decline, accept: false, reason }));
       return renderMe();
@@ -605,13 +605,13 @@ function wireEmployer(){
     const stage = sel.value;
     let reason = "";
     if(stage === "rejected"){
-      reason = prompt(t("hc_reason_prompt") + " (salary / skill / location / availability / culture / experience / no-show / other)");
+      reason = await UI.prompt(t("hc_reason_prompt") + " (salary / skill / location / availability / culture / experience / no-show / other)");
       if(!reason) return renderEmployer();
     }
     let salary = "";
-    if(stage === "offer") salary = prompt(t("hc_offer_salary")) || "";
+    if(stage === "offer") salary = (await UI.prompt(t("hc_offer_salary"))) || "";
     const r = await api("/api/mehnat/stage", ident.co({ id: sel.dataset.stageFor, stage, reason, salary }));
-    if(!r.ok) alert(t("hc_stage_fail"));
+    if(!r.ok) UI.alert(t("hc_stage_fail"));
     renderEmployer();
   });
 
@@ -620,7 +620,7 @@ function wireEmployer(){
     if(sl) return openShortlist(sl.dataset.shortlist);
     const cl = e.target.closest("[data-close]");
     if(cl){
-      if(!confirm(t("hc_confirm_close"))) return;
+      if(!await UI.confirm(t("hc_confirm_close"), { tone:"danger" })) return;
       await api("/api/mehnat/vacancy", ident.co({ op: "close", id: cl.dataset.close }));
       renderEmployer();
     }

@@ -18,6 +18,7 @@ const T = {
   nav_moliya:["Moliya bozori","Финансовый рынок","Finance market"],
   nav_mehnat:["Mehnat bozori","Рынок труда","Labour market"],
   nav_gov_services:["Davlat xizmatlari","Госуслуги","Government services"],
+  nav_bizid:["Business ID","Business ID","Business ID"],
   /* ---- XIZMATLAR ---- */
   svc_eyebrow:["Xizmatlar","Услуги","Services"],
   svc_h2:["A'zo korxonalar <span class=\"grad\">xizmatlari</span>","Услуги <span class=\"grad\">компаний-участников</span>","Services from <span class=\"grad\">member companies</span>"],

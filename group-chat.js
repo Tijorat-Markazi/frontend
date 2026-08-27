@@ -635,8 +635,8 @@ function kgGroupChat(o) {
       api({ op: "react", group: active, id: id, emoji: emoji }).then(reload);
     }
   }
-  function act_delete(id) {
-    if (!window.confirm(t("del_ask"))) return;
+  async function act_delete(id) {
+    if (!await UI.confirm(t("del_ask"), { tone: "danger" })) return;
     if (!wsSend({ op: "delete", group: active, id: id })) {
       api({ op: "delete", group: active, id: id }).then(reload);
     }

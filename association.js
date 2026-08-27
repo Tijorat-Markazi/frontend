@@ -26,6 +26,7 @@ function fmtDateTime(s){const d=new Date(s);if(isNaN(d))return s||"";return `${d
 
 /* ---- translations ---- */
 const AT = {
+  nav_bizid:["Business ID","Business ID","Business ID"],
   lg_title:["Super Admin paneli","Панель супер-админа","Super Admin panel"],
   lg_sub:["Login va parol bilan kiring (admin bergan).","Войдите по логину и паролю (выданы админом).","Sign in with the login/password issued by the admin."],
   lg_btn:["Kirish →","Войти →","Sign in →"],
@@ -117,6 +118,14 @@ const AT = {
   i_sector:["Soha","Отрасль","Sector"],
   i_login:["Login","Логин","Login"],
   i_pass:["Parol","Пароль","Password"],
+  nav_legal:["Ma'lumotlarim va huquqlarim","Мои данные и права","My data and rights"],
+  /* The panel used to print the member's password here. It cannot any more:
+     nothing stores a readable one. These carry the replacement action. */
+  pw_hidden:["Ko'rsatilmaydi","Не показывается","Not shown"],
+  pw_reset:["Parolni tiklash","Сбросить пароль","Reset password"],
+  pw_confirm:["Yangi parol yaratilsinmi? Eski parol ishlamay qoladi va yangisi faqat bir marta ko'rsatiladi.","Создать новый пароль? Старый перестанет работать, а новый будет показан только один раз.","Create a new password? The old one stops working and the new one is shown only once."],
+  pw_once:["Yangi parol — nusxa oling, u boshqa ko'rsatilmaydi:","Новый пароль — скопируйте, он больше не покажется:","New password — copy it, it will not be shown again:"],
+  pw_why:["Parollar qaytarilmas shaklda saqlanadi (ZRU-547, 27-modda), shuning uchun ularni ko'rib bo'lmaydi — faqat yangisini berish mumkin.","Пароли хранятся в необратимой форме (ст. 27 ЗРУ-547), поэтому их нельзя посмотреть — можно только выдать новый.","Passwords are stored irreversibly (Art. 27 ZRU-547), so they cannot be read — only replaced."],
   i_created:["Ro'yxatdan o'tgan","Дата регистрации","Registered"],
   i_products:["Mahsulotlar soni","Кол-во товаров","Products count"],
   /* questions */
@@ -183,6 +192,7 @@ const t = k => AT[k][L()];
 
 /* ---- nav ---- */
 const NAV = [
+  {v:"bizid",k:"nav_bizid",ic:svg('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M5.5 17c.6-1.8 2-2.6 3.5-2.6s2.9.8 3.5 2.6"/><path d="M15 9h4M15 13h4"/>')},
   {v:"dashboard", k:"nav_dash", ic:svg('<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>')},
   {v:"registrations", k:"nav_regs", badge:"reg", ic:svg("<path d=\"M9 11l3 3L22 4\"/><path d=\"M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\"/>")},
   {v:"companies", k:"nav_comp", ic:(typeof ICONS!=="undefined"&&ICONS.business)?ICONS.business:svg('<path d="M3 21h18"/><path d="M5 21V8l7-4 7 4v13"/>')},
@@ -192,8 +202,11 @@ const NAV = [
   {v:"groups", k:"nav_groups", href:"chat.html", ic:svg('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>')},
   {v:"appeals", k:"nav_appeals", ic:svg('<path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M12 3l9 5H3z"/>')},
   {v:"conference", k:"nav_conf", ic:svg('<path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/>')},
+  /* Rights under modda 21-22 ZRU-547 — an association's chairman is a data
+     subject too, and this is where their own account lives. */
+  {v:"legal", k:"nav_legal", ic:svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 0 1-4 0v-.1A1.7 1.7 0 0 0 6 19.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.4 13H4a2 2 0 0 1 0-4h.1A1.7 1.7 0 0 0 5.3 6L5.2 6a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 11 4.4V4a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V11a2 2 0 0 1 0 4h-.1z"/>')},
 ];
-const VIEW_TITLE = {dashboard:"nav_dash",registrations:"nav_regs",companies:"nav_comp",questions:"nav_quest",news:"nav_news",report:"nav_report",conference:"nav_conf",appeals:"nav_appeals"};
+const VIEW_TITLE = {legal:"nav_legal",bizid:"nav_bizid",dashboard:"nav_dash",registrations:"nav_regs",companies:"nav_comp",questions:"nav_quest",news:"nav_news",report:"nav_report",conference:"nav_conf",appeals:"nav_appeals"};
 
 /* ============================================================
    API helpers
@@ -251,7 +264,7 @@ function renderCompanies(){
     <td><a href="#" class="cd-open" data-id="${c.id}"><b>${esc(c.name)}</b></a></td>
     <td>${esc(c.sector)||"—"}</td>
     <td><code>${esc(c.login)}</code></td>
-    <td><code>${esc(c.password)}</code></td>
+    <td><button class="btn btn-ghost cd-pw" data-id="${c.id}" style="padding:4px 9px;font-size:12.5px">${t("pw_reset")}</button></td>
     <td style="text-align:center">${(c.showroom||[]).length}</td>
     <td style="white-space:nowrap">
       <button class="btn btn-ghost cd-stat" data-id="${c.id}" style="padding:5px 10px;font-size:13px">${t("view")}</button>
@@ -261,7 +274,7 @@ function renderCompanies(){
     <div class="admin-panel">
       <h2>${t("nav_comp")} (${companies.length})</h2>
       <p style="color:var(--muted);font-size:14px;margin-bottom:14px">${t("cmp_intro")}</p>
-      <table class="admin-table"><thead><tr><th>${t("c_name")}</th><th>${t("c_sector")}</th><th>${t("c_login")}</th><th>${t("c_pass")}</th><th style="text-align:center">${t("c_prod")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="admin-table"><thead><tr><th>${t("c_name")}</th><th>${t("c_sector")}</th><th>${t("c_login")}</th><th>${t("i_pass")}</th><th style="text-align:center">${t("c_prod")}</th><th></th></tr></thead><tbody>${rows}</tbody></table>
       <div class="err" id="cmpErr" style="margin-top:10px"></div>
       <form class="admin-form mb-form" id="cmpForm">
         <input id="cmp-name" placeholder="${t("ph_name")}" required>
@@ -280,6 +293,33 @@ function renderCompanies(){
   });
   view.querySelectorAll(".tdel").forEach(b=>b.addEventListener("click",()=>op({op:"del",id:b.dataset.id}).then(()=>renderCompanies())));
   view.querySelectorAll(".cd-open,.cd-stat").forEach(b=>b.addEventListener("click",e=>{e.preventDefault();detailId=b.dataset.id;renderCompanies();}));
+  bindPwReset(view);
+}
+
+/* ---------- password reset ----------
+   The panel can no longer show a member's password, because the platform no
+   longer keeps one it could show — only a scrypt hash. Helping a member who
+   has lost theirs therefore means issuing a new one, and the new one exists
+   in readable form for exactly the length of this response. */
+function bindPwReset(view){
+  view.querySelectorAll(".cd-pw").forEach(b=>b.addEventListener("click",async e=>{
+    e.preventDefault();
+    if(!confirm(t("pw_confirm"))) return;
+    b.disabled=true;
+    const r=await op({op:"pw",id:b.dataset.id});
+    b.disabled=false;
+    if(!r||!r.password) return;
+    /* Shown once, next to the button that produced it, and left on screen
+       until the page is redrawn — long enough to copy, nowhere to go back to. */
+    const box=document.createElement("div");
+    box.className="pw-once";
+    box.innerHTML=`<div>${esc(t("pw_once"))}</div>`
+      +`<code class="pw-once-val">${esc(r.password)}</code>`
+      +`<div class="pw-once-why">${esc(t("pw_why"))}</div>`;
+    b.parentNode.insertBefore(box,b.nextSibling);
+    const val=box.querySelector(".pw-once-val");
+    val.addEventListener("click",()=>{ if(navigator.clipboard) navigator.clipboard.writeText(r.password); });
+  }));
 }
 function renderCompanyDetail(view){
   const c=companies.find(x=>x.id===detailId);
@@ -303,7 +343,7 @@ function renderCompanyDetail(view){
         ${row(t("i_name"),esc(c.name))}
         ${row(t("i_sector"),esc(c.sector)||"—")}
         ${row(t("i_login"),`<code>${esc(c.login)}</code>`)}
-        ${row(t("i_pass"),`<code>${esc(c.password)}</code>`)}
+        ${row(t("i_pass"),`<span class="ac-label">${t("pw_hidden")}</span> <button class="btn btn-ghost cd-pw" data-id="${escA(c.id)}" style="padding:4px 9px;font-size:12.5px;margin-left:8px">${t("pw_reset")}</button>`)}
         ${row(t("i_created"),c.created?fmtDateTime(c.created):"—")}
         ${row(t("i_products"),prods.length)}
       </tbody></table>
@@ -313,6 +353,7 @@ function renderCompanyDetail(view){
       <div class="show-grid">${grid}</div>
     </div>`;
   $("#cdBack").addEventListener("click",()=>{detailId=null;renderCompanies();});
+  bindPwReset(view);
 }
 async function op(body){
   const j=await assocReq("/api/assoc/companies",body);
@@ -556,7 +597,7 @@ function renderConference(){
    SHELL: nav + view switching
    ============================================================ */
 function renderView(){
-  ["dashboard","registrations","companies","questions","news","report","conference","appeals"].forEach(v=>$("#view-"+v)&&$("#view-"+v).classList.toggle("active",v===activeView));
+  ["bizid","dashboard","registrations","companies","questions","news","report","conference","appeals","legal"].forEach(v=>$("#view-"+v)&&$("#view-"+v).classList.toggle("active",v===activeView));
   if(activeView==="dashboard")  renderDashboard();
   if(activeView==="registrations") renderRegistrations();
   if(activeView==="companies"){ detailId=null; renderCompanies(); }
@@ -564,7 +605,11 @@ function renderView(){
   if(activeView==="news")       renderNews();
   if(activeView==="report")     renderReport();
   if(activeView==="conference") renderConference();
+  if(activeView==="legal") LegalPanel.mount($("#view-legal"), {
+    creds: () => creds, panelClass: "admin-panel", profileHref: "association.html",
+    onWithdrawn: () => { sessionStorage.removeItem("kg_as"); location.href = "index.html"; } });
   if(activeView==="appeals") renderAppeals();
+  if(activeView==="bizid") BizIdPanel.mount($("#bizidHost"), creds);
   $("#viewTitle").textContent=t(VIEW_TITLE[activeView]);
 }
 function buildNav(){
@@ -584,7 +629,15 @@ function buildNav(){
    AUTH + public page
    ============================================================ */
 const PAGE_ID = new URLSearchParams(location.search).get("id");
-function showLogin(){ $("#asLogin").hidden=false; $("#asShell").hidden=true; $("#asPublic").hidden=true; setTimeout(()=>$("#asLoginInp").focus(),50); }
+/* The public view and the site header belong to the same mode: the cabinet
+   has its own sidebar, so the header must come and go with the page, not
+   linger above a panel that already has navigation. */
+function showPublicChrome(on){
+  const pub = $("#asPublic"), hdr = $("#pubHeader");
+  if(pub) pub.hidden = !on;
+  if(hdr) hdr.hidden = !on;
+}
+function showLogin(){ $("#asLogin").hidden=false; $("#asShell").hidden=true; showPublicChrome(false); setTimeout(()=>$("#asLoginInp").focus(),50); }
 async function tryLogin(login,password){
   const r=await fetch("/api/assoc/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login,password})});
   if(!r.ok) return false;
@@ -605,7 +658,7 @@ function paintBrand(){
 }
 
 async function startApp(){
-  $("#asLogin").hidden=true; $("#asPublic").hidden=true; $("#asShell").hidden=false;
+  $("#asLogin").hidden=true; showPublicChrome(false); $("#asShell").hidden=false;
   paintBrand();
   $("#aiNav").href="assistant.html?panel=assoc&co="+encodeURIComponent(aName(assoc));
   // detect an active meeting for the dashboard KPI
@@ -619,21 +672,29 @@ async function loadPublic(id){
     const r=await fetch("/api/assoc/public?id="+encodeURIComponent(id));
     if(!r.ok){ location.href="associations.html"; return; }
     const j=await r.json();
-    $("#asLogin").hidden=true; $("#asShell").hidden=true; $("#asPublic").hidden=false;
+    $("#asLogin").hidden=true; $("#asShell").hidden=true; showPublicChrome(true);
     $("#pubName").textContent=aName(j.assoc)||"—";
     $("#pubChair").textContent=j.assoc.chairman?("Rahbar: "+j.assoc.chairman):"";
     $("#pubCount").textContent=(j.companies||[]).length;
     const grid=$("#pubCompanies");
     if(!j.companies||!j.companies.length){ grid.innerHTML=`<p class="co-sub">${t("pub_empty")}</p>`; }
+    /* Every member company now has a page of its own, so every row is
+       clickable — a company with nothing in the showroom yet used to render
+       as a dead card. The Business ID sits beside it as its own control,
+       outside the card's <a>, because anchors cannot nest. */
     else grid.innerHTML=j.companies.map(c=>{
       const inner=`
         <span class="dir-mark">${esc((c.name||"?").charAt(0).toUpperCase())}</span>
         <span class="dir-body"><b>${esc(c.name)}</b><em>${esc(c.sector)||"&nbsp;"}</em>
           ${c.products?`<span class="dir-count">🛍️ ${c.products}</span>`:""}</span>`;
-      // only companies that actually have products in the showroom are clickable
-      return c.products
-        ? `<a class="dir-card" href="showroom.html?company=${encodeURIComponent(c.name||"")}">${inner}<span class="dir-open">${esc(t("open"))}</span></a>`
-        : `<div class="dir-card" style="cursor:default">${inner}</div>`;
+      const href = c.bizId ? "korxona.html?id="+encodeURIComponent(c.bizId) : "";
+      return `<div class="dir-item">
+        ${href
+          ? `<a class="dir-card" href="${href}">${inner}<span class="dir-open">${esc(t("open"))}</span></a>`
+          : `<div class="dir-card" style="cursor:default">${inner}</div>`}
+        ${c.bizId?`<a class="dir-bizbtn" href="biznes-id.html?id=${encodeURIComponent(c.bizId)}"
+          title="Business ID">${esc(c.bizId)}</a>`:""}
+      </div>`;
     }).join("");
   }catch(e){ location.href="associations.html"; }
 }
@@ -734,18 +795,18 @@ document.addEventListener("click", async e => {
   if(btn.disabled) return;
 
   const data = { id: ok ? ok.dataset.rqOk : no.dataset.rqNo, action: ok ? "approve" : "reject" };
-  if(ok){ if(!confirm(t("rq_confirm"))) return; }
+  if(ok){ if(!await UI.confirm(t("rq_confirm"))) return; }
   else {
     /* A rejection the applicant cannot understand is worse than none, so the
        reason is required — the server refuses without one either way. */
-    const reason = prompt(t("rq_reason_q"));
+    const reason = await UI.prompt(t("rq_reason_q"));
     if(!reason || !reason.trim()) return;
     data.reason = reason.trim();
   }
   btn.disabled = true;
   const r = await regApi("decide", data);
   btn.disabled = false;
-  if(!r || !r.ok) alert(t("rq_fail"));
+  if(!r || !r.ok) UI.alert(t("rq_fail"));
   renderRegistrations();
 });
 

@@ -394,15 +394,18 @@ var KGChat = (function () {
    */
   function linkButton(btn, input, prompts) {
     prompts = prompts || {};
-    btn.addEventListener("click", function (e) {
+    btn.addEventListener("click", async function (e) {
       e.preventDefault();
+      /* Read the selection before awaiting — opening the dialog moves focus
+         out of the input, and some browsers drop the range with it. */
       var a = input.selectionStart == null ? 0 : input.selectionStart;
       var b = input.selectionEnd == null ? 0 : input.selectionEnd;
       var selected = input.value.slice(a, b);
-      var url = window.prompt(prompts.url || "Havola manzili (https://…)", "https://");
+      var url = await UI.prompt(prompts.url || "Havola manzili (https://…)", "https://");
       if (!url) return;
-      if (!safeHref(url)) { window.alert(prompts.bad || "Faqat http:// yoki https:// havolalar"); return; }
-      var label = selected || window.prompt(prompts.label || "Havola matni", url) || url;
+      if (!safeHref(url)) { UI.alert(prompts.bad || "Faqat http:// yoki https:// havolalar", { tone: "danger" }); return; }
+      var label = selected || (await UI.prompt(prompts.label || "Havola matni", url)) || url;
+      input.focus();
       input.setSelectionRange(a, b);
       insertAt(input, "[" + label.replace(/[\[\]]/g, "") + "](" + url + ")");
     });

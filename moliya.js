@@ -388,7 +388,7 @@ async function openIdea(id){
   const b = $("#mlNda");
   if(b) b.addEventListener("click", async () => {
     if(!ident.email()) return say($("#mkDrawerBody"), t("ml_need_email"), "err");
-    if(!confirm(t("ml_nda_confirm"))) return;
+    if(!await UI.confirm(t("ml_nda_confirm"))) return;
     await api("/api/moliya/idea", ident.me({ op: "nda", id }));
     openIdea(id);
   });

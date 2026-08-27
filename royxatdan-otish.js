@@ -30,6 +30,13 @@ const ERR = {
   name_required:  "rg_e_name",   assoc_required: "rg_e_assoc",  assoc_unknown: "rg_e_assoc",
   email_invalid:  "rg_e_email",  login_invalid:  "rg_e_login",  password_short: "rg_e_pass",
   login_taken:    "rg_e_taken",  login_pending:  "rg_e_taken",  too_many_pending: "rg_e_many",
+
+  /* Not validation — the request never reached a working endpoint, so "try
+     again" would send the applicant round the form a second time for nothing.
+     `unknown_endpoint` is what a server running older code answers. */
+  network:          "rg_e_offline",
+  bad_response:     "rg_e_unavailable",
+  unknown_endpoint: "rg_e_unavailable",
 };
 
 async function submit(e){
@@ -56,6 +63,9 @@ async function submit(e){
     tin: v("rgTin"), website: v("rgWebsite"), about: v("rgAbout"),
     contactName: v("rgContact"), role: v("rgRole"), email: v("rgEmail"), phone: v("rgPhone"),
     login: v("rgLogin").toLowerCase(), password: pass,
+    /* The server records this as a dated, versioned consent event and refuses
+       the application without it — see srv/legal.js. */
+    consent: $("#rgConsent").checked,
   });
   btn.disabled = false;
 

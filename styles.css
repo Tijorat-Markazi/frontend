@@ -14,8 +14,42 @@
 :root{
   /* --navy = the deep blue of a portal niche; primary action colour */
   --navy:#1f4e79; --navy-2:#163a5c; --navy-3:#2f6ba3;
-  /* --gold = the carved/gilded frame around the arch */
-  --gold:#b8873a; --gold-soft:#d8ae5c;
+  /* --gold = the carved/gilded frame around the arch, and since the
+     controls are gilded too, the material they are cast from. */
+  --gold:#b8873a; --gold-soft:#d8ae5c; --gold-lift:#e6c483;
+  /* Gold as TEXT is a different problem from gold as a SURFACE:
+     --gold-soft on cream measures 2.9:1 and fails outright, so the
+     text gold is its own token and goes bronze in the light theme. */
+  --gold-ink:#7d5820;
+  --gold-rule:rgba(184,135,58,.55);
+  --gold-rule-soft:rgba(184,135,58,.38);
+  --gold-wash:rgba(184,135,58,.10);
+  /* Deep sapphire ground for the footer, CTA and admin chrome. In LIGHT this
+     stays the sapphire it has always been; the dark theme re-points the whole
+     family at its own ground (see below), which is what stops the night view
+     from carrying a navy slab across the bottom of every page. */
+  --deep:#0c2340; --deep-lift:#102a4d; --deep-sink:#091a2f;
+  /* The lighter partner in every deep gradient — niche, login gate, CTA. */
+  --deep-edge:#1c4a72;
+  /* The footer is glass, so its stops carry alpha. They were written straight
+     into the rule as rgba() literals, which is why overriding --deep alone did
+     nothing to it. */
+  --deep-glass-1:rgba(19,48,86,.70);
+  --deep-glass-2:rgba(12,35,64,.75);
+  --deep-glass-3:rgba(8,26,47,.80);
+  /* The wash of light over the top of the deep surfaces. */
+  --deep-glow:rgba(47,107,163,.32);
+  --deep-glow-strong:rgba(47,107,163,.5);
+  /* The veil that darkens the foot of the admin and chat sidebars. */
+  --deep-veil:rgba(12,35,64,.84);
+  --deep-veil-fade:rgba(12,35,64,.11);
+  /* Backdrop-filter settings for the footer pane. Tokenised because 190%
+     saturation is right over sapphire and far too much over a neutral. */
+  --deep-sat:190%; --deep-bright:1.08;
+  /* Type ON deep chrome. Not --ink/--text: those follow the page ground,
+     and this ground does not change with the theme in light mode. */
+  --deep-text:#d4e0ef;
+  --deep-muted:#93a6c0;
   --ink:#1a2333; --text:#565e72; --muted:#838ba0;
   --line:#e2dac9; --line-2:#d3c8b0;
   --bg:#f8f4ea; --bg-soft:#f3ecdf; --bg-soft-2:#ebe3d2;
@@ -35,22 +69,53 @@
   --arch-sm:44px 44px 9px 9px;
   --arch-xs:22px 22px 5px 5px;
 }
-/* Dark theme: the same two hues lifted for a night ground. */
+/* Dark theme — "Tun": a near-black neutral ground.
+   The previous night palette was a blue-tinted black (#10161f, hue 216°),
+   and because the deep chrome below is sapphire too, the whole night view
+   read as one blue wash. Here the ground carries no hue at all: the only
+   colour on the page is the gold and the ceramic blue, which is the point
+   of having them. Measured on this ground: ink 18.3:1, body text 9.2:1,
+   muted 5.5:1, and 8.9:1 / 5.3:1 respectively on a card. */
 [data-theme="dark"]{
-  --navy:#7fa8d8; --navy-2:#95bae4; --navy-3:#a9c7ec;
-  --gold:#d8ae5c; --gold-soft:#e6c483;
-  --ink:#f1ece1; --text:#a5adc0; --muted:#767e93;
-  --line:#232c3d; --line-2:#33405a;
-  --bg:#10161f; --bg-soft:#151d29; --bg-soft-2:#1d2836;
-  --card:#141b26;
-  --header-bg:rgba(16,22,31,.82);
+  --navy:#93b7e0; --navy-2:#a7c6ea; --navy-3:#bad2f0;
+  --gold:#dcb264; --gold-soft:#ecc98c; --gold-lift:#f4dcae;
+  /* On a near-black ground the soft gold is already 12:1 as text. */
+  --gold-ink:#ecc98c;
+  --gold-rule:rgba(220,178,100,.48);
+  --gold-rule-soft:rgba(220,178,100,.32);
+  --gold-wash:rgba(220,178,100,.11);
+  --ink:#f7f5f1; --text:#b2b0ac; --muted:#88867f;
+  --line:#212123; --line-2:#313134;
+  --bg:#09090a; --bg-soft:#111112; --bg-soft-2:#1b1b1d;
+  --card:#0e0e0f;
+  --header-bg:rgba(9,9,10,.88);
   --hero-bg:transparent;
   --green:#3ec49a;
   --shadow-sm:0 1px 2px rgba(0,0,0,.5);
   --shadow:0 20px 44px -24px rgba(0,0,0,.85);
   --shadow-lift:0 26px 52px -26px rgba(0,0,0,.92);
-  --glass:rgba(20,27,38,.74);
-  --glass-line:rgba(255,255,255,.07);
+  --glass:rgba(14,14,15,.78);
+  --glass-line:rgba(255,255,255,.08);
+
+  /* Deep chrome follows the ground at night. Without this the footer, the
+     CTA band, the hero niche and the admin sidebar stay sapphire and the
+     page ends up neutral everywhere except its largest surfaces. */
+  --deep:#111112; --deep-lift:#1b1b1d; --deep-sink:#000000;
+  --deep-edge:#252528;
+  --deep-glass-1:rgba(26,26,28,.72);
+  --deep-glass-2:rgba(17,17,18,.78);
+  --deep-glass-3:rgba(8,8,9,.84);
+  /* The overhead wash turns warm rather than blue — the gold is the only
+     hue the night palette keeps, so the light falling on the pane is its. */
+  --deep-glow:rgba(220,178,100,.15);
+  --deep-glow-strong:rgba(220,178,100,.22);
+  --deep-veil:rgba(8,8,9,.84);
+  --deep-veil-fade:rgba(8,8,9,.11);
+  /* 190% saturation over sapphire is a deliberate richness; over a neutral
+     it just drags colour out of whatever is behind the glass. */
+  --deep-sat:112%; --deep-bright:1.03;
+  --deep-text:#dcdad6;
+  --deep-muted:#9a9893;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;scroll-padding-top:96px}
@@ -67,9 +132,12 @@ h1,h2,h3,h4{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-heigh
   radial-gradient(ellipse 46% 38% at 12% 0%,rgba(31,78,121,.18),transparent 64%),
   radial-gradient(ellipse 40% 34% at 88% 2%,rgba(216,174,92,.16),transparent 66%);
   pointer-events:none}
+/* The night blooms were a blue and a pink left over from an earlier palette;
+   on a neutral ground they were the only two hues in the room and both were
+   the wrong ones. Now: one cool white breath, one warm gold. */
 [data-theme="dark"] .bg-grid{background:
-  radial-gradient(ellipse 46% 38% at 12% 0%,rgba(127,168,216,.16),transparent 64%),
-  radial-gradient(ellipse 40% 34% at 88% 2%,rgba(239,138,183,.10),transparent 66%)}
+  radial-gradient(ellipse 46% 38% at 12% 0%,rgba(255,255,255,.05),transparent 64%),
+  radial-gradient(ellipse 40% 34% at 88% 2%,rgba(220,178,100,.075),transparent 66%)}
 .bg-glow{display:none}
 
 @media (prefers-reduced-motion:reduce){
@@ -80,6 +148,14 @@ h1,h2,h3,h4{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-heigh
 /* Glass chrome: the mesh ground shows through, so the header reads as a
    floating surface rather than a solid bar. */
 .site-header{position:sticky;top:0;z-index:50;background:var(--header-bg);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);border-bottom:1px solid var(--line);transition:background .3s,border-color .3s}
+/* The header gets a wider track than page content.
+   Signed in, the bar carries a second button (Chiqish) and the whole row —
+   wordmark, six links, both buttons — lands within a pixel or two of the
+   1200px content container. Being 2px over made it collapse to a burger on
+   every screen size, and any fix that shrank the type made the bar a
+   different size on different pages. Widening the header's own track keeps
+   one navbar at one size everywhere, and leaves page content at 1200. */
+.site-header .container{max-width:1320px}
 .header-inner{display:flex;align-items:center;gap:28px;height:76px}
 
 /* Wordmark — no monogram. The name carries the brand on its own. */
@@ -294,18 +370,18 @@ h1,h2,h3,h4{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-heigh
 .admin-brand{gap:0}
 
 /* ===== CTA ===== */
-.cta{background:#12304c;background-image:
-  radial-gradient(ellipse 60% 80% at 15% 0%,rgba(47,107,163,.5),transparent 62%),
+.cta{background:var(--deep);background-image:
+  radial-gradient(ellipse 60% 80% at 15% 0%,var(--deep-glow-strong),transparent 62%),
   radial-gradient(ellipse 55% 75% at 88% 100%,rgba(216,174,92,.3),transparent 64%),
-  linear-gradient(160deg,#12304c,#1c4a72)}
+  linear-gradient(160deg,var(--deep),var(--deep-edge))}
 .cta-inner{display:flex;justify-content:center}
 .cta-card{position:relative;max-width:760px;width:100%;text-align:center;padding:14px 20px}
 .cta-card h2{font-size:clamp(28px,3.8vw,42px);margin-bottom:14px;color:#fff}
 .cta-card .grad{color:var(--gold-soft)}
-.cta-card>p{color:#b9bed4;font-size:17px;max-width:520px;margin:0 auto 30px}
+.cta-card>p{color:var(--deep-text);font-size:17px;max-width:520px;margin:0 auto 30px}
 .cta-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:540px;margin:0 auto}
 .cta-form input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:14px 16px;color:#fff;font-size:15px;outline:none;font-family:inherit}
-.cta-form input::placeholder{color:#9096ad}
+.cta-form input::placeholder{color:var(--deep-muted)}
 .cta-form input:focus{border-color:var(--gold-soft);background:rgba(255,255,255,.12)}
 .cta-form input:nth-child(3){grid-column:1/-1}
 .cta-form button{grid-column:1/-1;background:#d8ae5c;border-color:#d8ae5c;color:#221a08}
@@ -313,19 +389,25 @@ h1,h2,h3,h4{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-heigh
 .cta-note{margin-top:18px;color:#7fe3c0;font-weight:600}
 
 /* ===== FOOTER ===== */
-.footer{border-top:0;padding:56px 0 28px;background:#12304c;color:#b9bed4;position:relative}
+.footer{border-top:0;padding:56px 0 28px;color:var(--deep-text);position:relative;isolation:isolate;
+  background:
+    radial-gradient(ellipse 120% 72% at 50% -6%,var(--deep-glow),transparent 72%),
+    linear-gradient(180deg,var(--deep-lift) 0%,var(--deep) 44%,var(--deep-sink) 100%)}
+/* Gilded hairline along the top edge — the single warm note on the deep ground. */
+.footer::before{content:'';position:absolute;inset:0 0 auto;height:1px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(216,174,92,.42) 16%,rgba(216,174,92,.62) 50%,rgba(216,174,92,.42) 84%,transparent)}
 .footer-inner{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:38px}
 .footer-brand{display:flex;gap:14px;align-items:flex-start;max-width:300px}
-.footer-brand .brand-mark{background:#fff;color:#12304c}
+.footer-brand .brand-mark{background:#fff;color:var(--deep)}
 .footer-brand .brand-mark::after{border-color:var(--gold)}
 .footer-brand strong{font-family:'Inter',sans-serif;font-size:17px;color:#fff}
 .footer-brand .ai{color:var(--gold-soft)}
-.footer-brand p{font-size:13px;color:#9096ad;margin-top:5px}
+.footer-brand p{font-size:13px;color:var(--deep-muted);margin-top:5px}
 .footer-cols{display:flex;gap:54px;flex-wrap:wrap}
-.footer-cols h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:14px;font-family:'Inter',sans-serif;font-weight:700}
-.footer-cols a{display:block;color:#9096ad;font-size:14px;margin-bottom:9px;transition:color .2s}
+.footer-cols h4{font-size:12.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--deep-text);margin-bottom:14px;font-family:'Inter',sans-serif;font-weight:700}
+.footer-cols a{display:block;color:var(--deep-muted);font-size:14px;margin-bottom:9px;transition:color .2s}
 .footer-cols a:hover{color:#fff}
-.footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);color:#7b8199;font-size:13px}
+.footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:22px;border-top:1px solid rgba(255,255,255,.09);color:var(--deep-muted);font-size:13px}
 
 /* ===== DETAIL PAGE ===== */
 .crumb{border-bottom:1px solid var(--line);background:var(--bg-soft);font-size:13.5px}
@@ -472,17 +554,17 @@ h1,h2,h3,h4{font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-heigh
 
 /* ===== ADMIN PANEL ===== */
 .admin-shell{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
-.admin-side{background:#12304c;color:#b9bed4;padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.admin-side{background:var(--deep);color:var(--deep-text);padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:6px}
 .admin-side .admin-brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}
-.admin-brand .brand-mark{width:38px;height:38px;font-size:12px;background:#fff;color:#12304c}
+.admin-brand .brand-mark{width:38px;height:38px;font-size:12px;background:#fff;color:var(--deep)}
 .admin-brand b{font-family:'Inter',sans-serif;color:#fff;font-size:15px;display:block;line-height:1.1}
-.admin-brand span{font-size:11px;color:#9096ad}
+.admin-brand span{font-size:11px;color:var(--deep-muted)}
 .admin-nav{display:flex;flex-direction:column;gap:3px}
-.admin-nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;color:#b9bed4;font-family:inherit;font-size:14.5px;font-weight:500;padding:11px 12px;border-radius:10px;cursor:pointer;transition:.15s}
+.admin-nav button{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;color:var(--deep-text);font-family:inherit;font-size:14.5px;font-weight:500;padding:11px 12px;border-radius:10px;cursor:pointer;transition:.15s}
 .admin-nav button svg{width:18px;height:18px;flex-shrink:0}
 .admin-nav button:hover{background:rgba(255,255,255,.07);color:#fff}
 .admin-nav button.active{background:var(--navy);color:#fff;font-weight:600;box-shadow:0 8px 18px -10px rgba(31,78,121,.7)}
-.admin-side .admin-back{margin-top:auto;font-size:13px;color:#9096ad;padding:11px 12px;border-top:1px solid rgba(255,255,255,.12)}
+.admin-side .admin-back{margin-top:auto;font-size:13px;color:var(--deep-muted);padding:11px 12px;border-top:1px solid rgba(255,255,255,.12)}
 .admin-side .admin-back:hover{color:#fff}
 
 .admin-main{background:var(--bg-soft);min-width:0}
@@ -1070,7 +1152,174 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 .btn-primary{background:var(--navy);border-color:var(--navy);color:#fff}
 .btn-primary:hover{background:var(--navy-2);border-color:var(--navy-2)}
 .btn-ghost{border-color:var(--gold-soft);color:var(--navy)}
-.btn-ghost:hover{border-color:var(--gold);color:var(--navy-2);background:var(--bg-soft-2)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--navy-2)}
+
+/* ══ shisha · the glass details ═══════════════════════════════
+   The background is a glass city, so the controls in front of it are cut
+   from the same material. Glass is not a colour, it is four things happening
+   at once, and leaving any one of them out is what makes a translucent panel
+   read as "faded box" instead:
+
+     1  it refracts     backdrop-filter blurs and saturates what is behind
+     2  it has an edge  a bright hairline where the light catches the rim
+     3  it has a body   a gradient across the face, lighter at the top
+     4  it casts        a soft shadow, because it sits above the page
+
+   Everything below is those four, tuned per control. The tokens carry the
+   theme difference: in light the tint is white over cream, in dark it is a
+   whisper of white over navy — the same material under different light,
+   which is the point. */
+:root{
+  --sh-face:linear-gradient(157deg,rgba(255,255,255,.66),rgba(255,255,255,.28));
+  --sh-edge:rgba(255,255,255,.8);
+  --sh-sheen:rgba(255,255,255,.9);
+  --sh-cast:0 10px 26px -14px rgba(26,35,51,.42);
+  --sh-cast-hi:0 18px 38px -16px rgba(31,78,121,.5);
+  --sh-blur:blur(16px) saturate(180%);
+  --sh-face-tint:linear-gradient(157deg,rgba(255,255,255,.86),rgba(255,255,255,.64));
+}
+[data-theme="dark"]{
+  --sh-face:linear-gradient(157deg,rgba(255,255,255,.13),rgba(255,255,255,.035));
+  --sh-edge:rgba(255,255,255,.2);
+  --sh-sheen:rgba(255,255,255,.34);
+  --sh-cast:0 12px 30px -16px rgba(0,0,0,.85);
+  --sh-cast-hi:0 20px 42px -18px rgba(0,0,0,.95);
+  --sh-blur:blur(18px) saturate(150%);
+  --sh-face-tint:linear-gradient(157deg,rgba(14,14,15,.86),rgba(14,14,15,.66));
+}
+
+/* ══ zarhal · the gilded controls ═════════════════════════════
+   These were glass — a blur, a bright rim, and a travelling specular
+   sheen. Glass takes its colour from whatever is behind it, and behind
+   these sits a skyline fixed to the viewport: the same control read
+   differently depending only on how far the page had been scrolled.
+   Gilding does not have that problem. It is its own material, and it
+   carries the one hue this palette actually owns.
+
+   The primary is cast gold with a dark label. The secondary is a gold
+   RULE on the page ground — a frame, not a fill — so the two read as
+   one family without competing for the same weight.
+
+   The label colour is the part to be careful about. --gold-soft is
+   legible on a night ground and hopeless on cream (2.9:1), so the TEXT
+   gold is a separate token from the SURFACE gold and goes dark in the
+   light theme. See --gold-ink in the palette block.
+
+   The glass tokens above are NOT dead: cards still use them (see
+   .dir-card/.show-card/.stat near the end of this file, and markets.css).
+   Only the controls stopped being glass.
+   ═══════════════════════════════════════════════════════════════ */
+
+.btn,.btn-lg{border-radius:var(--radius-pill)}
+
+/* Cast, not plated. A gradient across the face and a shadow tinted with
+   its own colour — that tinted shadow is most of what separates gold
+   from a yellow rectangle. */
+.btn-primary{
+  background:linear-gradient(160deg,var(--gold-soft),var(--gold));
+  color:#221a08;
+  border:1px solid var(--gold-soft);
+  font-weight:700;
+  box-shadow:0 10px 26px -14px var(--gold);
+  position:relative;overflow:hidden;
+}
+.btn-primary:hover{
+  background:linear-gradient(160deg,var(--gold-lift),var(--gold-soft));
+  border-color:var(--gold-lift);
+  box-shadow:0 16px 32px -16px var(--gold);
+  transform:translateY(-2px);
+}
+.btn-primary:active{transform:translateY(0);box-shadow:0 6px 16px -12px var(--gold)}
+
+/* The secondary is a rule, not a fill. It fills only on hover, which is
+   what keeps two gold buttons side by side from reading as equals. */
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--gold-rule);
+  color:var(--gold-ink);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.btn-ghost:hover{
+  background:var(--gold-wash);
+  border-color:var(--gold);
+  color:var(--gold-ink);
+  transform:translateY(-2px);
+}
+.btn-ghost:active{transform:translateY(0)}
+
+/* Header controls wear the same rule, so the row reads as one set. */
+.icon-btn,.lang-btn{
+  background:transparent;
+  border:1px solid var(--gold-rule-soft);
+  color:var(--gold-ink);
+  border-radius:var(--radius-pill);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.icon-btn:hover,.lang-btn:hover{
+  background:var(--gold-wash);
+  border-color:var(--gold);
+  color:var(--gold-ink);
+  transform:translateY(-2px);
+}
+.icon-btn:active,.lang-btn:active{transform:translateY(0)}
+
+/* Labels are the faintest member of the family: a wash inside a rule. */
+.pill,.eyebrow{
+  background:var(--gold-wash);
+  border:1px solid var(--gold-rule-soft);
+  color:var(--gold-ink);
+  border-radius:var(--radius-pill);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+
+/* The active pill in the header, and only that.
+   Two things in the nav can be "the active page": a plain top-level link,
+   and the button of a dropdown whose section you are inside. They have to
+   look identical or the header changes shape as you move between sections.
+
+   The child combinator matters. `.nav a.active` also reaches the rows
+   INSIDE an open dropdown, which would put a pill on a menu line that is
+   not a pill at all; the row keeps its own flat highlight below. */
+.nav > a.active,
+.nav-group.is-active > .nav-gbtn{
+  background:var(--gold-wash);
+  color:var(--gold-ink);
+  border:1px solid var(--gold-rule);
+  box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+
+/* The dropdown panel stays glass, deliberately. It is a floating SHEET
+   over the page, not a control — a sheet wants the page visible through
+   it, a button does not. */
+.nav-menu{
+  background:var(--sh-face-tint);
+  -webkit-backdrop-filter:var(--sh-blur);
+          backdrop-filter:var(--sh-blur);
+  border:1px solid var(--sh-edge);
+  box-shadow:inset 0 1px 0 var(--sh-sheen),var(--shadow-lift);
+}
+.nav-menu a.active{background:var(--gold);color:#221a08}
+
+/* Keyboard users get a real ring. A gold ring on a gold rim would vanish,
+   so the ring is the page ink — the one colour guaranteed to contrast with
+   every control in this family. */
+.btn:focus-visible,.icon-btn:focus-visible,.lang-btn:focus-visible,
+.nav > a.active:focus-visible,.nav-group.is-active > .nav-gbtn:focus-visible{
+  outline:2px solid var(--ink);outline-offset:3px;
+}
+
+/* Only the dropdown sheet still depends on a backdrop it can bend. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .nav-menu{background:var(--card)}
+}
+@media(prefers-reduced-motion:reduce){
+  .btn-primary:hover,.btn-ghost:hover,.icon-btn:hover,.lang-btn:hover{transform:none}
+}
+
 
 /* ── the hero arch: a portal niche beside the headline ───────── */
 /* The portal niche is out for now, so the copy takes the full width.
@@ -1079,7 +1328,7 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 .hero-arch{position:relative;overflow:hidden;height:352px;
   border-radius:145px 145px 12px 12px;
   border:6px solid var(--gold-soft);
-  background:linear-gradient(170deg,#24598a,#12304c)}
+  background:linear-gradient(170deg,var(--deep-edge),var(--deep))}
 [data-theme="dark"] .hero-arch{border-color:var(--gold)}
 
 /* ── girih in the niche, still ───────────────────────────────
@@ -1169,7 +1418,7 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
    ============================================================ */
 
 /* ── login gates: the front door of every profile ───────────── */
-.admin-login{background:linear-gradient(170deg,#24598a,#12304c);position:relative}
+.admin-login{background:linear-gradient(170deg,var(--deep-edge),var(--deep));position:relative}
 .admin-login::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:var(--gold-soft);opacity:.1;
   -webkit-mask-image:var(--naqsh-mask);mask-image:var(--naqsh-mask);
@@ -1192,7 +1441,7 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 /* Strongest at the foot, where the sidebar is empty; quietest behind
    the nav, so it never fights the menu labels for attention. */
 .admin-side::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(#12304c 30%,rgba(18,48,76,.82) 58%,rgba(18,48,76,.1))}
+  background:linear-gradient(var(--deep) 30%,var(--deep-veil) 58%,var(--deep-veil-fade))}
 .admin-side > *{position:relative;z-index:2}
 .admin-side .admin-brand{border-bottom-color:rgba(216,174,92,.34)}
 .admin-brand b{font-family:'Source Serif 4',Georgia,serif;font-size:16.5px;letter-spacing:-.01em}
@@ -1255,10 +1504,23 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
    the ground the site stands on rather than a hero decoration. It is a
    body-level element at z-index -1: above the canvas background and the
    .bg-grid mesh at -2, below every bit of content. */
-.skyline{position:fixed;left:0;right:0;bottom:0;height:min(52vh,440px);
+/* Full viewport height, not a band at the foot of the page.
+   At 52vh the strip ended in a horizontal line partway up the screen: glass
+   below it, flat unbroken page colour above. That upper half read as a dead
+   slab rather than as sky — the thing it sat under was a photograph, so the
+   emptiness above it looked like something missing. Running the strip the
+   whole height and carrying the fade most of the way up means the city
+   thins out into the ground instead of stopping against it.
+
+   The upper stops are held deliberately low. Measured across six pages, the
+   only heading this extension pushed under its floor was a gold one already
+   sitting at 3.09:1 — the band above the old cut-off carries live copy on
+   every page, so it gets the faintest end of the fade. */
+.skyline{position:fixed;left:0;right:0;bottom:0;height:100vh;
   pointer-events:none;z-index:-1;overflow:hidden;
-  -webkit-mask-image:linear-gradient(180deg,transparent,#000 34%,#000);
-          mask-image:linear-gradient(180deg,transparent,#000 34%,#000)}
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.13) 30%,rgba(0,0,0,.48) 52%,#000 72%,#000);
+          mask-image:linear-gradient(180deg,transparent 0,rgba(0,0,0,.13) 30%,rgba(0,0,0,.48) 52%,#000 72%,#000)}
+@supports(height:100dvh){.skyline{height:100dvh}}
 .sky-svg{width:100%;height:100%;display:block}
 
 /* ── a real monument, pushed towards illustration ───────────
@@ -1266,15 +1528,106 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
    onto the palette by the SVG filter in monument-bg.js. Masked hard
    at the top so the headline never lands on it. */
 .mon-defs{position:absolute;width:0;height:0;overflow:hidden}
+/* ---- the foreground layer ----
+   monument-bg.js mounts this next to .mon-photo whenever a plate is found, so
+   it has to be styled here rather than in one page's stylesheet — otherwise
+   every other page would download the image for an unstyled, invisible div.
+
+   Depth is the difference in travel between near and far, so this sits closer
+   and moves further. The strip gets a perspective so the two layers rotate in
+   space rather than sliding flat across it. */
+.skyline{perspective:900px}
+.mon-photo,.mon-near{will-change:transform}
+
+/* ---- one photograph, both themes ----
+   Near and far are the same glass city, drawn on flat black. The theme is a
+   matter of ink, not of which city you are looking at:
+
+     dark   the plate is left alone. Its black ground already matches the page,
+            so only the lit glass survives, and `screen` — which can lighten
+            but never darken — lets it glow against whatever it crosses.
+     light  the plate is inverted first. That turns the black ground white,
+            near enough the cream page to disappear, and turns the lit glass
+            into ink. `multiply` can darken but never lighten, so the drawing
+            settles onto the page instead of bleaching it.
+
+   The pairing matters in that order: `screen` on a plate whose ground is pale
+   is what blew the whole band out to white and started this. Each blend mode
+   is matched to a ground it cannot damage. hue-rotate puts the colour back
+   where invert threw it, so the gold reads as gold rather than as cyan.
+
+   Both are held well below full saturation. The glass is lit amber and the
+   brand accent is gold, so at full strength the plate and the accent are the
+   same colour: measured over the strip, a gold heading dropped from 8.8:1 to
+   2.8:1 purely because it had landed on its own hue. Pulling the saturation
+   down separates them again. A background that competes with the type is not
+   doing its job however good the picture is. */
+/* The ink is a token because each plane adds its own haze on top of it, and
+   `filter` is one property — a layer that wants blur has to restate the whole
+   chain. Naming it once keeps the three planes from drifting apart. */
+:root{--plate-ink:invert(1) hue-rotate(180deg) saturate(.34)}
+[data-theme="dark"]{--plate-ink:saturate(.5)}
+
+.mon-photo,.mon-mid,.mon-near{mix-blend-mode:multiply;filter:var(--plate-ink)}
+[data-theme="dark"] .mon-photo,[data-theme="dark"] .mon-mid,[data-theme="dark"] .mon-near{
+  mix-blend-mode:screen}
+
+/* ---- aerial perspective ----
+   Distance is not only a matter of how fast a thing moves. Air is not clear:
+   the further away something is, the more of it you are looking through, so
+   it loses contrast and detail before it loses size. Three planes travelling
+   at three rates but rendered at identical crispness read as three flat cards
+   on rails; graded haze is what turns them into distance.
+
+   So the far skyline is the softest and faintest, the middle distance sits
+   between, and the foreground is sharpest — and carries a touch of blur of
+   its own, because it is nearer than the eye is focused.
+
+   The whole stack is then pushed back: smaller, hazier and fainter than a
+   first pass had it. Size is the strongest distance cue there is, so the
+   middle plane shrank before anything else was touched. The travel ratios
+   were left alone — they are what separates the planes from each other, and
+   dimming a thing is not the same as moving it away. */
+.mon-photo{filter:var(--plate-ink) blur(3.2px)}
+.mon-mid{filter:var(--plate-ink) blur(1.5px)}
+.mon-near{filter:var(--plate-ink) blur(.8px)}
+
+/* ---- the middle distance ----
+   Larger on screen than the far skyline and anchored lower, so it sits in
+   front of it rather than beside it. The size is set explicitly rather than
+   with `cover`: cover fits the image to the BOX, and since this box and the
+   far one are both full height, cover would have drawn both at the same
+   scale — two planes the same size at different speeds read as a glitch,
+   not as depth. */
+.mon-mid{position:absolute;left:0;right:0;bottom:0;height:82%;
+  background-size:145% auto;background-position:center bottom;
+  background-repeat:no-repeat;
+  opacity:.16;pointer-events:none;will-change:transform;
+  -webkit-mask-image:linear-gradient(180deg,transparent 8%,#000 46%,#000);
+          mask-image:linear-gradient(180deg,transparent 8%,#000 46%,#000)}
+[data-theme="dark"] .mon-mid{opacity:.21}
+@media(prefers-reduced-motion:reduce){.mon-mid{transform:none !important}}
+
+/* Sized against the viewport, not the strip. This was 74% of a 52vh box;
+   the box is now the full height, and a percentage would have scaled the
+   foreground up with it and swallowed the frame. */
+.mon-near{position:absolute;left:0;right:0;bottom:0;height:min(46vh,400px);
+  background-size:cover;background-position:center bottom;
+  opacity:.2;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,transparent 4%,#000 34%,#000);
+          mask-image:linear-gradient(180deg,transparent 4%,#000 34%,#000)}
+[data-theme="dark"] .mon-near{opacity:.29}
+@media(prefers-reduced-motion:reduce){
+  .mon-photo,.mon-near{transform:none !important}}
+
 .mon-photo{position:absolute;inset:0;background-size:cover;background-position:center bottom;
-  filter:url(#kgMonument);opacity:.5;
-  -webkit-mask-image:linear-gradient(180deg,transparent 4%,#000 62%,#000);
-          mask-image:linear-gradient(180deg,transparent 4%,#000 62%,#000)}
-[data-theme="dark"] .mon-photo{opacity:.34}
+  opacity:.14;
+  -webkit-mask-image:linear-gradient(180deg,transparent 6%,#000 58%,#000);
+          mask-image:linear-gradient(180deg,transparent 6%,#000 58%,#000)}
+[data-theme="dark"] .mon-photo{opacity:.19}
 /* Once a photo is in place the drawn skyline steps aside — two
    backgrounds at once would fight each other. */
 .skyline.mon-ready .sky-svg{display:none}
-@media(max-width:760px){.mon-photo{opacity:.4}}
 .sky-layer path{fill:none;stroke:var(--navy);stroke-linecap:round;stroke-linejoin:round;
   vector-effect:non-scaling-stroke}
 .sky-layer{will-change:transform;transition:transform .45s cubic-bezier(.16,1,.3,1)}
@@ -1306,7 +1659,11 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 /* align-items:start so a card sizes to its own content — grid rows
    stretch by default, which left the short cards with a large empty
    tail matched to the tallest one in the row. */
-#home-assoc .dir-grid,#home-show .show-grid{align-items:start}
+/* align-items:start let each card size to its own text, so a row of
+   associations came out at four different heights — the longer the name,
+   the taller the card. Stretch is the grid default and the right answer:
+   one row, one height, whatever the names do. */
+#home-assoc .dir-grid,#home-show .show-grid{align-items:stretch}
 /* Four to a row rather than three, so each card is roughly a quarter
    of the width instead of a third. */
 #home-assoc .dir-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:26px}
@@ -1350,14 +1707,14 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
    thread, both filling the viewport, with one way back out. */
 .chat-page{overflow:hidden}
 .tg{display:grid;grid-template-columns:340px 1fr;height:100vh;height:100dvh;background:var(--bg)}
-.tg-side{display:flex;flex-direction:column;min-height:0;background:#12304c;
+.tg-side{display:flex;flex-direction:column;min-height:0;background:var(--deep);
   border-right:3px solid var(--gold-soft);position:relative;isolation:isolate}
 .tg-side::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
   background:var(--gold-soft);opacity:.13;
   -webkit-mask-image:var(--naqsh-mask);mask-image:var(--naqsh-mask);
   -webkit-mask-size:56px 56px;mask-size:56px 56px}
 .tg-side::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
-  background:linear-gradient(#12304c 26%,rgba(18,48,76,.85) 56%,rgba(18,48,76,.12))}
+  background:linear-gradient(var(--deep) 26%,var(--deep-veil) 56%,var(--deep-veil-fade))}
 .tg-side > *{position:relative;z-index:2}
 .tg-side-top{padding:16px 14px 12px;border-bottom:1px solid rgba(216,174,92,.3);display:grid;gap:11px}
 .tg-back{display:inline-block;color:var(--gold-soft);font-size:13.5px;font-weight:700;
@@ -1366,7 +1723,7 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 .tg-back:hover{background:var(--gold-soft);color:#221a08;border-color:var(--gold-soft)}
 .tg-search{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
   border-radius:var(--radius-pill);padding:9px 15px;color:#eee;font:inherit;font-size:13.5px;outline:none}
-.tg-search::placeholder{color:#8fa3b8}
+.tg-search::placeholder{color:var(--deep-muted)}
 .tg-search:focus{border-color:var(--gold-soft);background:rgba(255,255,255,.13)}
 
 .tg-list{flex:1;overflow-y:auto;padding:8px}
@@ -1378,13 +1735,13 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
 .tg-av{width:42px;height:42px;flex-shrink:0;border-radius:21px 21px 6px 6px;display:grid;place-items:center;
   background:var(--navy-3);color:#fff;font-size:14px;font-weight:700;letter-spacing:-.01em}
 .tg-av.gold{background:var(--gold);color:#221a08}
-.tg-room.on .tg-av{background:#12304c;color:var(--gold-soft)}
+.tg-room.on .tg-av{background:var(--deep);color:var(--gold-soft)}
 .tg-room-txt{min-width:0}
 .tg-room-top{display:flex;align-items:baseline;gap:8px}
 .tg-room-top b{flex:1;min-width:0;color:#fff;font-size:14px;font-weight:600;line-height:1.25;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tg-room-top time{font-size:11px;color:#8fa3b8;flex-shrink:0}
-.tg-room-sub{display:block;font-size:12.5px;color:#93a7bb;margin-top:2px;
+.tg-room-top time{font-size:11px;color:var(--deep-muted);flex-shrink:0}
+.tg-room-sub{display:block;font-size:12.5px;color:var(--deep-muted);margin-top:2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tg-room.on .tg-room-top b,.tg-room.on .tg-room-top time,.tg-room.on .tg-room-sub{color:#221a08}
 .tg-room.on .tg-room-sub{opacity:.75}
@@ -1708,12 +2065,20 @@ h1,h2,.hero h1,.section-head h2,.cta-card h2,.brand-text strong,.footer-brand st
    grids, stranding a lone card at the end of each block. These
    counts are fixed by the content, so the columns are set to match. */
 #roles .future-grid{grid-template-columns:repeat(4,1fr)}
-#how .values-grid{grid-template-columns:repeat(4,1fr)}
+/* Seven steps in a four-wide grid leaves the second row three-quarters
+   full, with a hole where the fourth card would be — the sequence reads
+   as if a step is missing. Flex-wrap with a centred last row keeps the
+   cards the same width and the same height per row, and balances the
+   remainder whatever the step count grows to. */
+#how .values-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
+#how .value-card{flex:1 1 240px;max-width:calc(25% - 12px)}
 @media(max-width:1100px){
-  #roles .future-grid,#how .values-grid{grid-template-columns:repeat(2,1fr)}
+  #roles .future-grid{grid-template-columns:repeat(2,1fr)}
+  #how .value-card{max-width:calc(50% - 8px)}
 }
 @media(max-width:620px){
-  #roles .future-grid,#how .values-grid{grid-template-columns:1fr}
+  #roles .future-grid{grid-template-columns:1fr}
+  #how .value-card{max-width:100%}
 }
 
 
@@ -1868,7 +2233,7 @@ body:has(.asst-page) > .site-header{flex:0 0 auto}
 .co-badge{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;
   min-width:20px;height:20px;padding:0 6px;border-radius:10px;
   background:var(--gold-soft);color:#221a08;display:grid;place-items:center}
-.admin-nav button.active .co-badge{background:#12304c;color:var(--gold-soft)}
+.admin-nav button.active .co-badge{background:var(--deep);color:var(--gold-soft)}
 
 .iq-list{display:flex;flex-direction:column;gap:14px;margin-top:16px}
 .iq-card{background:var(--bg-soft);border:1px solid var(--line);border-left:3px solid var(--line-2);
@@ -2402,3 +2767,221 @@ body:has(.asst-page) > .site-header{flex:0 0 auto}
    that position:relative exists to anchor. [hidden]{display:none!important}
    still hides it once a cabinet opens. */
 .admin-login{min-height:100dvh}
+
+/* ── Business ID beside a directory row ──────────────────────
+   The whole row is already a link to the organisation itself, and an
+   anchor cannot contain another anchor, so the card's own Business ID
+   is laid over the row rather than nested inside it. The card keeps
+   room for it on the right; the overlay only covers that gap. */
+/* The wrapper became the grid item when the Business ID button was added
+   beside the row, so the wrapper stretched to the row height but the card
+   inside it kept sizing to its own text — which is why a row of
+   associations came out at three different card heights. The wrapper
+   passes the stretch through. */
+.dir-item{position:relative;display:flex}
+.dir-item > .dir-card{flex:1 1 auto}
+.dir-item .dir-card{padding-right:112px}
+.dir-bizbtn{position:absolute;right:16px;top:50%;transform:translateY(-50%);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:11.5px;letter-spacing:.06em;color:var(--navy);text-decoration:none;
+  background:var(--bg-soft);border:1px solid var(--line-2);border-radius:999px;
+  padding:6px 12px;white-space:nowrap;transition:.16s}
+.dir-bizbtn:hover{border-color:var(--gold);color:var(--navy-2);background:var(--bg-soft-2)}
+.dir-item .dir-open{display:none}          /* the button is the affordance now */
+
+/* The card lifts on hover, but the button is its sibling, not its child, so
+   it stayed behind and visibly detached. Hover is handled on the wrapper
+   instead: both move, and hovering the button lifts the card it belongs to.
+   The button's own translateY(-50%) centres it, so the lift has to be folded
+   into that one transform rather than added as a second. */
+.dir-item:hover .dir-card{border-color:var(--line-2);transform:translateY(-4px);
+  box-shadow:var(--shadow-lift);border-top-color:var(--navy)}
+.dir-item:hover .dir-bizbtn{transform:translateY(calc(-50% - 4px))}
+
+@media (max-width:640px){
+  .dir-item .dir-card{padding-right:18px;padding-bottom:44px}
+  .dir-bizbtn{top:auto;bottom:12px;right:auto;left:18px;transform:none}
+  /* stacked layout: the button sits inside the card, so it only needs the lift */
+  .dir-item:hover .dir-bizbtn{transform:translateY(-4px)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .dir-item:hover .dir-card{transform:none}
+  .dir-item:hover .dir-bizbtn{transform:translateY(-50%)}
+}
+
+/* ══ shisha · the panels ══════════════════════════════════════
+   The cards are the same material as the controls, and for the same reason:
+   they sit directly on the glass city, and a panel that does not refract what
+   is behind it reads as a rectangle pasted over a photograph.
+
+   Tinted, not clear — every one of these carries a name, a role and a count.
+   Clear glass would hand their contrast over to whatever part of the skyline
+   happened to be behind them, which changes as the page scrolls.
+
+   This block sits at the end of the file deliberately: .dir-card is restyled
+   in three later places (the arch radius, the hover lift, the list variant),
+   and a glass definition placed with the other glass would have been undone
+   by all three. */
+.dir-card,.show-card,.stat,.stat-card{
+  background:var(--sh-face-tint);
+  -webkit-backdrop-filter:var(--sh-blur);
+          backdrop-filter:var(--sh-blur);
+  border:1px solid var(--sh-edge);
+  box-shadow:inset 0 1px 0 var(--sh-sheen),var(--sh-cast);
+}
+/* the gold lintel across the top of the arch survives the border shorthand */
+.dir-card{border-top:4px solid var(--gold-soft)}
+.dir-item:hover .dir-card,a.dir-card:hover,.show-card:hover{
+  border-color:var(--gold);
+  box-shadow:inset 0 1px 0 var(--sh-sheen),var(--sh-cast-hi);
+}
+.dir-item:hover .dir-card{border-top-color:var(--gold)}
+
+/* The initial badge had the same fault the primary button did: --navy is a
+   pale blue in dark theme, so a white letter on it sat at roughly 2.5:1 —
+   and this one is a single glyph, with no word shape to fall back on. */
+.dir-mark{
+  background:linear-gradient(158deg,var(--navy-2),var(--navy));
+  box-shadow:inset 0 1px 0 var(--sh-sheen),0 4px 10px -6px rgba(0,0,0,.5);
+}
+[data-theme="dark"] .dir-mark{color:var(--bg)}
+
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .dir-card,.show-card,.stat,.stat-card{background:var(--card)}
+}
+
+/* ══ shisha · the footer as a portal ══════════════════════════
+   It was an opaque sapphire slab, which is the one thing on the page the
+   glass city could not be seen through — the background runs the full height
+   of every screen and then stopped dead at the footer.
+
+   What makes it read as glass, in the order the eye picks it up:
+
+   1  a THIN tint over a real backdrop blur. The sapphire is now .70–.80
+      alpha, not .88–.95, so roughly a quarter of the monument behind it
+      comes through and moves when the page scrolls. `saturate(190%)` and
+      `brightness(1.08)` are what stop a 30px blur from flattening the
+      backdrop into grey mush — thick glass still carries colour.
+
+   2  an arch. The whole design language is the ayvan — the portal niche —
+      and the footer is the one full-width surface that had square shoulders.
+      The radius is fluid so it stays a portal on a phone instead of becoming
+      a lozenge.
+
+   3  light ON the pane, not just through it: a bright inset rim along the
+      top edge, a hairline of white around the whole arch, and a slow
+      diagonal sheen (::after). The sheen is the part that still says "pane"
+      on a page where the backdrop behind the footer happens to be flat.
+
+   No naqsh watermark. Glass reads as glass because you can see THROUGH it,
+   and a tile laid across the face is the one thing guaranteed to state the
+   opposite. The only things on this surface are what is behind it and the
+   light on its rim.
+
+   The tint could only be thinned because the footer's own type was
+   recoloured with it — see the block below. Worst case for pale-on-glass is
+   the cream page showing through at the panel's most transparent point
+   (.70): links land at 4.67:1 there and headings at 5.35:1. Thinning the
+   tint further without brightening that type again drops the links under
+   4.5:1, which is where the previous pass stopped. */
+.footer{
+  /* backdrop-filter builds its own stacking context; `isolation:isolate`
+     here was redundant and risked scoping the backdrop root to the footer
+     itself, which is exactly the layer that must NOT be sampled. */
+  isolation:auto;
+  background:
+    /* the light falling on the shoulder of the arch */
+    linear-gradient(158deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.045) 26%,transparent 54%),
+    radial-gradient(ellipse 120% 72% at 50% -6%,var(--deep-glow),transparent 72%),
+    linear-gradient(180deg,var(--deep-glass-1) 0%,var(--deep-glass-2) 46%,var(--deep-glass-3) 100%);
+  -webkit-backdrop-filter:blur(30px) saturate(var(--deep-sat)) brightness(var(--deep-bright));
+          backdrop-filter:blur(30px) saturate(var(--deep-sat)) brightness(var(--deep-bright));
+  border-radius:clamp(26px,6.5vw,92px) clamp(26px,6.5vw,92px) 0 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.32),
+    inset 0 0 0 1px rgba(255,255,255,.07),
+    inset 0 30px 48px -36px rgba(255,255,255,.30),
+    0 -22px 60px -32px rgba(0,0,0,.55);
+  overflow:hidden;
+}
+/* the gilded hairline follows the arch instead of cutting straight across it */
+.footer::before{
+  inset:0;height:auto;border-radius:inherit;z-index:0;
+  border-top:1px solid transparent;
+  background:linear-gradient(90deg,transparent,rgba(216,174,92,.45) 16%,rgba(216,174,92,.7) 50%,rgba(216,174,92,.45) 84%,transparent) border-box;
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+          mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+}
+/* the sheen — one soft diagonal band of reflected light across the pane */
+.footer::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:linear-gradient(104deg,transparent 32%,rgba(255,255,255,.05) 44%,rgba(255,255,255,.11) 50%,rgba(255,255,255,.04) 56%,transparent 70%);
+}
+.footer-inner,.footer-bottom{position:relative;z-index:1}
+
+/* Type brightened to pay for the thinner tint. These sit at the end of the
+   sheet on purpose: the base footer colours (~line 340) are single-class
+   rules too, so equal specificity is settled by source order and an override
+   placed next to them would silently lose. */
+.footer{color:var(--deep-text)}
+.footer-brand p,.footer-cols a,.footer-bottom{color:var(--deep-text)}
+.footer-cols h4{color:var(--deep-text)}
+.footer-cols a:hover{color:#fff}
+.footer-bottom{border-top-color:rgba(255,255,255,.16)}
+.footer-brand strong{text-shadow:0 1px 14px rgba(6,18,34,.5)}
+
+/* A 30px blur across a full-width panel is the most expensive paint on the
+   page; phones get a cheaper pane and the same look. */
+@media(max-width:760px){
+  .footer{
+    -webkit-backdrop-filter:blur(18px) saturate(var(--deep-sat)) brightness(var(--deep-bright));
+            backdrop-filter:blur(18px) saturate(var(--deep-sat)) brightness(var(--deep-bright));
+  }
+}
+
+/* No backdrop blur, or transparency turned down at the OS level: fall back
+   to the solid sapphire the glass replaced. The brightened type above is
+   still comfortably legible on it. */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .footer{
+    background:linear-gradient(180deg,var(--deep-lift) 0%,var(--deep) 44%,var(--deep-sink) 100%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 -22px 60px -32px rgba(0,0,0,.6);
+  }
+  .footer::after{display:none}
+}
+@media(prefers-reduced-transparency:reduce){
+  .footer{
+    background:linear-gradient(180deg,var(--deep-lift) 0%,var(--deep) 44%,var(--deep-sink) 100%);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .footer::after{display:none}
+}
+
+/* ===== ONE-TIME PASSWORD REVEAL =====
+   Shown after an admin or association resets a member's password. It exists
+   because nothing stores a readable credential any more (srv/passwords.js):
+   the value in here is the only time this string is ever displayed, so it is
+   given the weight of a warning rather than the weight of a table cell. */
+.pw-once{margin-top:10px;padding:11px 13px;border-radius:var(--radius-sm);
+  background:rgba(184,135,58,.12);border:1px solid var(--gold);
+  font-size:13px;line-height:1.55;color:var(--ink);max-width:460px}
+.pw-once-val{display:block;margin:7px 0;padding:7px 11px;border-radius:6px;
+  background:var(--card);border:1px solid var(--line-2);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;
+  letter-spacing:.04em;color:var(--ink);cursor:pointer;user-select:all;word-break:break-all}
+.pw-once-val:hover{border-color:var(--gold)}
+.pw-once-why{color:var(--muted);font-size:12px;margin-top:5px}
+
+/* A missed data-subject deadline should be impossible to scroll past. */
+.dsr-late td{background:rgba(200,60,60,.09)}
+.dsr-late td:first-child{box-shadow:inset 3px 0 0 #c83c3c}
+textarea.dsr-ans{min-width:260px;font-family:inherit;font-size:13px;line-height:1.45;resize:vertical}
+/* The reference is quoted back by the person who filed it, so it must stay on
+   one line; the answer column carries prose and needs the room to show it. */
+#view-dsr .admin-table td:nth-child(1),
+#view-dsr .admin-table td:nth-child(4),
+#view-dsr .admin-table td:nth-child(5){white-space:nowrap}
+#view-dsr .admin-table td:nth-child(6){min-width:16rem}
+#view-dsr .admin-table td:nth-child(2){min-width:11rem}

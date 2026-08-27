@@ -277,7 +277,7 @@ function onFile(file){
     const r=new FileReader();r.onload=()=>{let c=String(r.result);if(c.length>20000)c=c.slice(0,20000);pendingAttachment={kind:"text",name:file.name,content:c};showChip(file.name,false);};r.readAsText(file);
   }else if(isDoc){
     const r=new FileReader();r.onload=()=>{pendingAttachment={kind:"binary",mime:file.type||"application/octet-stream",data:String(r.result).split(",")[1],name:file.name};showChip(file.name,false);};r.readAsDataURL(file);
-  }else{ alert(T.attach_bad[L()]); }
+  }else{ UI.alert(T.attach_bad[L()]); }
 }
 $("#attachBtn").addEventListener("click",()=>fileInput.click());
 fileInput.addEventListener("change",e=>{onFile(e.target.files[0]);fileInput.value="";});
