@@ -8,7 +8,7 @@ const $ = (s,r=document)=>r.querySelector(s);
 
 const params = new URLSearchParams(location.search);
 const TYPE = params.get("type");
-const IDX  = params.get("i");
+const IDX  = Number(params.get("i"));
 
 /* ---- module lead template ---- */
 function capsList(kind){

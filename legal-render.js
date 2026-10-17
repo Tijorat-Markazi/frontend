@@ -248,7 +248,7 @@
   function config() {
     if (cached) return Promise.resolve(cached);
     if (inflight) return inflight;
-    inflight = fetch("/api/legal").then(function (r) { return r.json(); })
+    inflight = KGAuth.fetch("/api/legal").then(function (r) { return r.json(); })
       .then(function (j) { cached = (j && j.ok) ? j : null; inflight = null; return cached; })
       .catch(function () { inflight = null; return null; });
     return inflight;

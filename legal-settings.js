@@ -120,7 +120,7 @@
   }
 
   function post(path, body) {
-    return fetch(path, {
+    return KGAuth.fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body || {})
@@ -130,8 +130,7 @@
   /**
    * Render the panel into `host`.
    *
-   * opts.creds       () => {login, password} — read at call time, never cached,
-   *                  so a cabinet that re-authenticates does not go stale.
+   * opts.creds       optional display metadata; authentication uses the cookie.
    * opts.panelClass  wrapper class; cabinets differ ("admin-panel" / "panel co-panel").
    * opts.profileHref where "correct your details yourself" points.
    * opts.onWithdrawn called after a successful withdrawal, to sign the user out.
@@ -147,8 +146,8 @@
 
     function load() {
       var c = creds();
-      if (!c || !c.login) { host.innerHTML = ""; return; }
-      post("/api/legal/export", c).then(function (r) {
+      if (!KGAuth.current()?.authenticated) { host.innerHTML = ""; return; }
+      post("/api/legal/export", {}).then(function (r) {
         if (!r || !r.ok) {
           host.innerHTML = '<div class="' + escA(panelClass) + '"><p class="ac-label">' + esc(T("failed")) + "</p></div>";
           return;
@@ -258,7 +257,7 @@
 
       $("#lgsErase").addEventListener("click", function () {
         var c = creds();
-        post("/api/legal/erase", Object.assign({}, c, { note: $("#lgsNote").value.trim() }))
+        post("/api/legal/erase", { note: $("#lgsNote").value.trim() })
           .then(function (r) {
             if (!r || !r.ok) return;
             say(T("erase_ok").replace("{ref}", r.ref).replace("{due}", day(r.due)), false);
@@ -269,14 +268,13 @@
       $("#lgsWd").addEventListener("click", function () {
         if ($("#lgsWord").value.trim().toUpperCase() !== T("wd_word").toUpperCase())
           return say(T("wd_need"), true);
-        post("/api/legal/withdraw", creds()).then(function (r) {
+        post("/api/legal/withdraw", {}).then(function (r) {
           if (r && r.error === "already_withdrawn") return say(T("wd_already"), true);
           if (!r || !r.ok) return;
           say(T("wd_bye"), false);
           setTimeout(function () {
             if (opts.onWithdrawn) opts.onWithdrawn();
-            else { ["kg_co", "kg_by", "kg_as"].forEach(function (k) { sessionStorage.removeItem(k); });
-                   location.href = "index.html"; }
+            else { KGAuth.logout().then(function(){location.href="index.html";}); }
           }, 1400);
         });
       });

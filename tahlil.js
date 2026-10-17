@@ -45,11 +45,11 @@ let view = "overview", DAYS = 90;
 let SEG = { module: "bozor", dimension: "" };
 let TREND = { module: "bozor", metric: "", bucket: "week" };
 
-try { creds = JSON.parse(sessionStorage.getItem("kg_an") || "null"); } catch(e){ creds = null; }
 
-const api = (path, extra) => fetch("/api/analyst/" + path, {
+
+const api = (path, extra) => KGAuth.fetch("/api/analyst/" + path, {
   method: "POST", headers: { "Content-Type": "application/json" },
-  body: JSON.stringify(Object.assign({}, creds || {}, { days: DAYS }, extra || {})),
+  body: JSON.stringify(Object.assign({}, { days: DAYS }, extra || {})),
 }).then(r => r.json()).catch(() => ({ error: "network" }));
 
 /* ---------- shell ---------- */
@@ -293,9 +293,9 @@ function renderReports(){
 
 /** A POST download needs the response as a blob, not a navigation. */
 async function download(kind){
-  const r = await fetch("/api/analyst/export", { method: "POST",
+  const r = await KGAuth.fetch("/api/analyst/export", { method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(Object.assign({}, creds || {}, { days: DAYS, kind })) });
+    body: JSON.stringify({ days: DAYS, kind }) });
   if(!r.ok) return UI.alert(t("an_fail"));
   const blob = await r.blob();
   const cd = r.headers.get("Content-Disposition") || "";
@@ -326,15 +326,14 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- auth ---------- */
-async function tryLogin(login, password){
-  const r = await fetch("/api/analyst/login", { method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ login, password }) }).then(x => x.json()).catch(() => ({}));
-  if(!r || !r.ok) return false;
-  creds = { login, password };
-  me = r.analyst; meta = r;
-  try { sessionStorage.setItem("kg_an", JSON.stringify(creds)); } catch(e){}
-  return true;
+async function tryLogin(login,password){
+  if(password!==undefined){
+    const target=await kgResolveLogin(login,password);
+    if(target&&target!=="tahlil.html"){location.href=target;return false;}
+    if(!target)return false;
+  }
+  await KGAuth.ready();creds=KGAuth.user(["analyst"]);if(!creds)return false;
+  const r=await KGAuth.json("/api/analyst/login",{});me=r.analyst;meta=r;return !!me;
 }
 
 function startApp(){
@@ -355,11 +354,14 @@ $("#anForm").addEventListener("submit", async e => {
   btn.disabled = true;
   $("#anErr").textContent = "";
   try {
-    if(await tryLogin(login, pass)){ startApp(); return; }
+    const destination=await kgResolveLogin(login,pass);
+    $("#anPass").value="";
+    if(destination==="tahlil.html"&&await tryLogin()){startApp();return;}
+    if(destination){location.href=destination;return;}
     /* Not an analyst account — but it may well be a company, association or
        admin one. The shared resolver routes them to their own cabinet rather
        than telling them their password is wrong. */
-    const target = await kgResolveLogin(login, pass);
+    const target = destination;
     if(target && target !== "tahlil.html"){ location.href = target; return; }
     $("#anErr").textContent = t("an_bad_creds");
     $("#anPass").value = "";
@@ -368,8 +370,7 @@ $("#anForm").addEventListener("submit", async e => {
   } finally { btn.disabled = false; }
 });
 $("#anOut").addEventListener("click", () => {
-  try { sessionStorage.removeItem("kg_an"); } catch(e){}
-  location.reload();
+  KGAuth.logout().then(()=>location.reload()).catch(e=>UI.alert(e.message));
 });
 
 /* ---------- chrome ---------- */
@@ -399,6 +400,6 @@ themeBtn.addEventListener("click", () =>
 setTheme(localStorage.getItem("kg_theme") || "light");
 applyChrome();
 (async () => {
-  if(creds && creds.login && await tryLogin(creds.login, creds.password)) startApp();
+  if(await tryLogin()) startApp();
 })();
 })();

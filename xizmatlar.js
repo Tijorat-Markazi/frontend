@@ -16,7 +16,7 @@ const escAt = s => escH(s).replace(/"/g,"&quot;");
 
 async function loadServices(){
   try{
-    const r = await fetch("/api/services");
+    const r = await KGAuth.fetch("/api/services");
     if(!r.ok) throw 0;
     const j = await r.json();
     SVC_ITEMS = j.items || [];

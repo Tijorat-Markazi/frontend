@@ -16,7 +16,7 @@
    ============================================================ */
 var KGChat = (function () {
 
-  var MAX = 12 * 1024 * 1024;
+  var MAX = 8 * 1024 * 1024;
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -116,13 +116,14 @@ var KGChat = (function () {
   /** The bubble body for one attachment. */
   function renderAttachment(att) {
     if (!att || !att.url) return "";
-    var url = esc(att.url), name = esc(att.name);
+    var safe=KGAuth.safeUrl(att.url);if(!safe)return "";
+    var url=esc(safe),name=esc(att.name);
     if (att.kind === "image") {
       return '<button type="button" class="ck-img" data-full="' + url + '">' +
              '<img src="' + url + '" alt="' + name + '" loading="lazy"></button>';
     }
     if (att.kind === "voice") {
-      return '<span class="ck-voice" data-src="' + url + '" data-dur="' + (att.dur || 0) + '">' +
+      return '<span class="ck-voice" data-src="' + url + '" data-dur="' + (Number(att.dur) || 0) + '">' +
                '<button class="ck-play" type="button" aria-label="play">▶</button>' +
                '<span class="ck-wave">' + bars(att.dur) + "</span>" +
                '<span class="ck-time">' + clock(att.dur) + "</span>" +
@@ -283,7 +284,7 @@ var KGChat = (function () {
   }
   function canRecord() { return recordState() === "ok"; }
   function secureUrl() {
-    return "https://" + location.hostname + ":4443" + location.pathname + location.search;
+    var url = new URL(location.href); url.protocol="https:"; url.port=""; return url.href;
   }
 
   function recorder(onDone, onTick, onError) {

@@ -58,7 +58,7 @@
   }
 
   function renderAssociations(host) {
-    return fetch("/api/assoc/list")
+    return KGAuth.fetch("/api/assoc/list")
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (list) {
         if (!Array.isArray(list) || !list.length) return false;
@@ -86,7 +86,7 @@
   }
 
   function renderShowroom(host) {
-    return fetch("/api/showroom")
+    return KGAuth.fetch("/api/showroom")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         var items = d && Array.isArray(d.items) ? d.items : [];
@@ -103,7 +103,7 @@
 
         document.getElementById("homeShowGrid").innerHTML = top.map(function (it) {
           return '<div class="show-card">' +
-            (it.img ? '<img class="show-img" src="' + esc(it.img) + '" alt="" loading="lazy">'
+            (it.img ? '<img class="show-img" src="' + esc(KGAuth.safeUrl(it.img,true)) + '" alt="" loading="lazy">'
                     : '<div class="show-img show-img-ph">🛍️</div>') +
             '<div class="show-body"><b>' + esc(it.name) + "</b>" +
               (it.price ? '<span class="show-price">' + esc(it.price) + "</span>" : "") +

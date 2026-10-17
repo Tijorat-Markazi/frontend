@@ -61,22 +61,11 @@
   }
 
   /* Someone already signed in has no business on the login page. */
-  const stored = k => { try { return JSON.parse(sessionStorage.getItem(k) || "null"); } catch(e){ return null; } };
-  function alreadyIn(){
-    if(sessionStorage.getItem("kg_admin") === "1") return "admin.html";
-    if((stored("kg_as")||{}).login) return "association.html";
-    if((stored("kg_co")||{}).login) return "company.html";
-    if((stored("kg_an")||{}).login) return "tahlil.html";
-    if((stored("kg_by")||{}).login) return "xaridor.html";
-    return null;
-  }
-
   const theme = localStorage.getItem("kg_theme") || "light";
   document.documentElement.dataset.theme = theme;
   paint();
 
-  const here = alreadyIn();
-  if(here) location.replace(safeNext() || here);
+  KGAuth.ready().then(s=>{if(s.authenticated&&!s.restricted)location.replace(safeNext()||KGAuth.safeTarget(s.target)||"index.html");}).catch(()=>{});
 
   const form = $("#kiForm"), err = $("#kiErr"), btn = $("#kiBtn");
   let busy = false;

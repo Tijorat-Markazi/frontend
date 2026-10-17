@@ -101,7 +101,7 @@ function render(){
       <div class="show-grid">${more.map(m => `
         <a class="show-card" href="mahsulot.html?id=${encodeURIComponent(m.id)}">
           ${safeUrl(m.img) || (m.img || "").startsWith("/")
-            ? `<img class="show-img" src="${escA(m.img)}" alt="" loading="lazy">`
+            ? `<img class="show-img" src="${escA(KGAuth.safeUrl(m.img,true))}" alt="" loading="lazy">`
             : `<div class="show-img show-img-ph">🛍️</div>`}
           <div class="show-body">
             <b>${esc(m.name)}</b>${m.price ? `<span class="show-price">${esc(m.price)}</span>` : ""}
@@ -124,7 +124,6 @@ async function send(e){
 
   const r = await api("/api/bozor/inquiry", {
     companyId: DATA.company.id, productId: DATA.product.id, source: "showroom",
-    viewKey: (() => { try { return localStorage.getItem("mk_iqkey") || ""; } catch(e){ return ""; } })(),
     name: $("#pdName").value.trim(), company: $("#pdOrg").value.trim(),
     email, contact, country: $("#pdCountry").value.trim(),
     qty: $("#pdQty").value, unit: $("#pdUnit").value.trim(),
@@ -133,9 +132,7 @@ async function send(e){
   if(!r.ok) return say(msg, r.error === "contact_required" ? t("pd_need_contact") : t("pd_send_fail"), "err");
 
   /* Remember the address so the reply can be shown next time they visit. */
-  if(email) ident.setPerson(email, $("#pdName").value.trim());
-  /* the capability key that lets this browser read the thread back */
-  if(r.viewKey) try { localStorage.setItem("mk_iqkey", r.viewKey); } catch(e){}
+  if(email) await ident.setPerson(email, $("#pdName").value.trim());
   say(msg, t("pd_send_ok").replace("{co}", DATA.company.name), "ok");
   $("#pdMessage").value = "";
   loadThread();
@@ -144,31 +141,24 @@ async function send(e){
 /* The buyer's own inquiries to this company, with the company's replies. */
 async function loadThread(){
   const host = $("#pdThread");
-  if(!host || !ident.email()) return;
-  let key = ""; try { key = localStorage.getItem("mk_iqkey") || ""; } catch(e){}
-  if(!key){ host.innerHTML = ""; return; }
-  const r = await api("/api/bozor/inquiry/mine", ident.me({ viewKey: key }));
+  if(!host || !DATA) return;
+  const r = await api("/api/bozor/inquiry/mine", {});
   const mine = (r.items || []).filter(i => i.productId === DATA.product.id
     || i.companyName === DATA.company.name);
-  if(!mine.length){ host.innerHTML = ""; return; }
-  host.innerHTML = `<div class="pd-thread">
-    <h3>${esc(t("pd_thread"))}</h3>
-    ${mine.map(i => `
-      <article class="pd-msg">
-        <div class="pd-msg-top">
-          <b>${esc(i.productName || DATA.product.name)}</b>
-          ${chip(t("pd_st_" + i.status, i.status), i.status === "answered" ? "good" : i.status === "closed" ? "ghost" : "warn")}
-          <span class="pd-msg-date">${day(i.created)}</span>
-        </div>
-        ${i.message ? `<p>${esc(i.message)}</p>` : ""}
-        ${(i.replies || []).map(rep => `
-          <div class="pd-reply">
-            <b>${esc(rep.by)}</b> <span class="pd-msg-date">${day(rep.t)}</span>
-            <p>${esc(rep.text)}</p>
-          </div>`).join("")}
-        ${!(i.replies || []).length ? `<p class="pd-hint">${esc(t("pd_awaiting"))}</p>` : ""}
-      </article>`).join("")}
-  </div>`;
+  host.replaceChildren();
+  if(!mine.length) return;
+  const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
+  const thread=node("div","pd-thread");thread.append(node("h3","",t("pd_thread")));
+  for(const inquiry of mine){
+    const article=node("article","pd-msg"),head=node("div","pd-msg-top");
+    const kind=inquiry.status==="answered"?"good":inquiry.status==="closed"?"ghost":"warn";
+    head.append(node("b","",inquiry.productName||DATA.product.name),node("span","mk-chip is-"+kind,t("pd_st_"+inquiry.status,inquiry.status)),node("span","pd-msg-date",day(inquiry.created)));
+    article.append(head);if(inquiry.message)article.append(node("p","",inquiry.message));
+    for(const reply of inquiry.replies||[]){const row=node("div","pd-reply");row.append(node("b","",reply.by),node("span","pd-msg-date",day(reply.t)),node("p","",reply.text));article.append(row);}
+    if(!(inquiry.replies||[]).length)article.append(node("p","pd-hint",t("pd_awaiting")));
+    thread.append(article);
+  }
+  host.append(thread);
 }
 
 chrome(() => { if(DATA) { render(); loadThread(); } });

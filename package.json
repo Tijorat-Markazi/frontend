@@ -1,0 +1,11 @@
+{
+  "name": "tijorat-markazi-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24 <25" },
+  "scripts": {
+    "test": "node --test tests/auth.test.mjs tests/static.test.mjs tests/render.test.mjs && node scripts/check-static.mjs",
+    "build": "node scripts/check-static.mjs && node scripts/build-static.mjs"
+  }
+}

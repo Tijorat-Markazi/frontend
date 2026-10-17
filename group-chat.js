@@ -47,7 +47,7 @@ var KG_GROUP_T = {
   react:    ["Reaksiya", "Реакция", "React"],
   read_by:  ["O‘qidi", "Прочитали", "Read by"],
   del_ask:  ["Bu xabar o‘chirilsinmi?", "Удалить это сообщение?", "Delete this message?"],
-  too_big:  ["Fayl juda katta (12 MB gacha)", "Файл слишком большой (до 12 МБ)", "File too large (12 MB max)"],
+  too_big:  ["Fayl juda katta (8 MiB gacha)", "Файл слишком большой (до 8 МиБ)", "File too large (8 MiB max)"],
   mic_denied:["Mikrofonga ruxsat berilmadi", "Доступ к микрофону запрещён", "Microphone permission denied"],
   mic_https:["Ovozli xabar uchun himoyalangan ulanish kerak. Xavfsiz manzilga o‘ting:",
              "Для голосовых сообщений нужно защищённое соединение. Откройте безопасный адрес:",
@@ -70,13 +70,13 @@ var KG_GROUP_T = {
  *
  * @param {object} o
  * @param {HTMLElement} o.mount    container filling the viewport
- * @param {object} o.creds         {login,password} or {pass:"admin"}
+ * The server resolves the caller from the HttpOnly session cookie.
  * @param {string} o.lang          "uz" | "ru" | "en"
  * @param {string} o.backHref      where the back button goes
  * @returns {{destroy:function}}
  */
 function kgGroupChat(o) {
-  var mount = o.mount, creds = o.creds || {};
+  var mount = o.mount;
   var idx = { uz: 0, ru: 1, en: 2 };
   var li = idx[o.lang] != null ? idx[o.lang] : 0;
   var t = function (k) { return KG_GROUP_T[k][li]; };
@@ -90,11 +90,10 @@ function kgGroupChat(o) {
 
   var api = function (body) {
     var p = {};
-    for (var k in creds) p[k] = creds[k];
     for (var j in body) p[j] = body[j];
     // room titles carry an association name, so they follow the reader's language
     if (p.lang == null) p.lang = (localStorage.getItem("kg_lang") || "uz");
-    return fetch("/api/group", {
+    return KGAuth.fetch("/api/group", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(p)
     }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
   };
@@ -481,7 +480,7 @@ function kgGroupChat(o) {
 
     sock.addEventListener("open", function () {
       retry = 0;
-      sock.send(JSON.stringify(Object.assign({ op: "auth" }, creds)));
+      sock.send(JSON.stringify({op:"auth"}));
     });
     sock.addEventListener("message", function (e) {
       var m = null;

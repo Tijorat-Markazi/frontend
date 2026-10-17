@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
+  <script src="auth.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Guruh chat — TIJORAT MARKAZI</title>
@@ -27,24 +28,11 @@
     var lang = localStorage.getItem("kg_lang") || "uz";
     document.documentElement.lang = lang;
 
-    function stored(key){
-      try { return JSON.parse(sessionStorage.getItem(key) || "null"); } catch(e){ return null; }
-    }
-    // Most privileged first — rais and admin share the admin panel.
-    var creds = null, back = "index.html";
-    if(sessionStorage.getItem("kg_admin") === "1"){ creds = { pass:"admin" }; back = "admin.html"; }
-    var rais = stored("kg_rais"); if(!creds && rais && rais.login){ creds = rais; back = "admin.html"; }
-    var as   = stored("kg_as");   if(!creds && as   && as.login){   creds = as;   back = "association.html"; }
-    var co   = stored("kg_co");   if(!creds && co   && co.login){   creds = co;   back = "company.html"; }
-
-    /* An analyst reads aggregates and is deliberately not a participant in the
-       members' chat, where commercially sensitive trade talk happens. Send
-       them back to their own panel instead of to the sign-in page. */
-    var an = stored("kg_an");
-    if(!creds && an && an.login){ location.replace("tahlil.html"); return; }
-
-    if(!creds){ location.replace("assistant.html"); return; }
-    kgGroupChat({ mount: document.getElementById("chatRoot"), creds: creds, lang: lang, backHref: back });
+    KGAuth.ready().then(function(s){
+      if(!s.authenticated||s.restricted){kgRequireLogin("chat.html");return;}
+      if(!["admin","rais","assoc","company"].includes(s.role)){location.replace(KGAuth.safeTarget(s.target)||"index.html");return;}
+      kgGroupChat({mount:document.getElementById("chatRoot"),lang:lang,backHref:KGAuth.safeTarget(s.target)||"index.html"});
+    }).catch(function(e){document.getElementById("chatRoot").textContent=e.message;});
   })();
   </script>
   <script src="monument-bg.js"></script>

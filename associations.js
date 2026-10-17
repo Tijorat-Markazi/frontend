@@ -89,7 +89,7 @@ $("#dirSearch").addEventListener("input",e=>render(e.target.value));
 /* ---- public catalog (open to all visitors) ---- */
 function openCatalog(){
   const app=$("#dirApp"); if(app) app.hidden=false;
-  fetch("/api/assoc/list").then(r=>r.json()).then(d=>{ LIST=Array.isArray(d)?d:[]; render(); }).catch(()=>{});
+  KGAuth.fetch("/api/assoc/list").then(r=>r.json()).then(d=>{ LIST=Array.isArray(d)?d:[]; render(); }).catch(()=>{});
 }
 
 /* init */

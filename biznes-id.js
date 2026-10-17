@@ -93,7 +93,8 @@ function showroomGrid(card){
   }).join("")}</div>`;
 }
 
-function renderCard(card){
+// This renderer escapes every text/attribute and validates external URLs.
+function renderBusinessIdCard(card){
   const name = (card.i18n && card.i18n[MK.lang()]) || card.name;
   const isAssoc = card.kind === "assoc";
 
@@ -312,7 +313,7 @@ async function load(){
     return;
   }
   document.title = ((card.i18n && card.i18n[MK.lang()]) || card.name) + " — Business ID";
-  root.innerHTML = renderCard(card);
+  root.innerHTML = renderBusinessIdCard(card);
   wireCard(card);
 }
 

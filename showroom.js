@@ -20,7 +20,7 @@ const assocLabel = v => (ASSOC_I18N[v] && ASSOC_I18N[v][LANG]) || v;
 async function loadShowroom(){
   const grid=$("#homeShowGrid");
   try{
-    const r=await fetch("/api/showroom"); if(!r.ok) throw 0;
+    const r=await KGAuth.fetch("/api/showroom"); if(!r.ok) throw 0;
     const j=await r.json();
     SHOW_ITEMS=j.items||[];
     ASSOC_I18N=j.assocI18n||{};
@@ -74,12 +74,12 @@ function renderShowroom(){
      stay as plain cards rather than linking nowhere. */
   grid.innerHTML=list.map(it=>{
     const inner=`
-      ${it.img?`<img class="show-img" src="${escAt(it.img)}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
+      ${it.img?`<img class="show-img" src="${escAt(KGAuth.safeUrl(it.img,true))}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
       <div class="show-body">
         <b>${escH(it.name)}</b>${it.price?`<span class="show-price">${escH(it.price)}</span>`:""}
         ${it.desc?`<p>${escH(it.desc)}</p>`:""}
         <span class="show-org">${escH(it.company)}${it.sector?` · ${escH(it.sector)}`:""}</span>
-        <span class="trade-badge trade-${(it.trade||"export")}">${(it.trade||"export")==="import"?T.show_trade_imp[L()]:T.show_trade_exp[L()]}</span>
+        <span class="trade-badge trade-${it.trade==="import"?"import":"export"}">${(it.trade||"export")==="import"?T.show_trade_imp[L()]:T.show_trade_exp[L()]}</span>
         <span class="show-more">${escH(T.show_more[L()])}</span>
       </div>`;
     return it.id

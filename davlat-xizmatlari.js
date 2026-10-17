@@ -15,7 +15,7 @@ const safeUrl = u => /^https?:\/\//i.test(String(u||"")) ? String(u) : "";
 
 async function loadGov(){
   try{
-    const r = await fetch("/api/gov-services");
+    const r = await KGAuth.fetch("/api/gov-services");
     if(!r.ok) throw 0;
     const j = await r.json();
     GS_ITEMS = j.items || [];

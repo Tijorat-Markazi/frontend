@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+dist/
+.cache/
+.verification/
 
 # Secrets — API keys, TLS material
 *.key

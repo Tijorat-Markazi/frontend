@@ -2,7 +2,8 @@
    HUMAN CAPITAL MARKAZI — client
    Jobs · Talent · Candidate passport · Recruitment OS · LMI
    ============================================================ */
-(() => {
+(async () => {
+await KGAuth.ready();
 const { $, $$, t, esc, escA, num, money, pctTxt, day, api, qs, ident, chip, chips,
         match, meters, ranks, kpi, funnel, draft, empty, loading, say,
         tabs, segment, drawer, closeDrawer, applyStatic, chrome } = MK;
@@ -197,10 +198,10 @@ function renderId(){
     <input id="hcEmail" type="email" value="${escA(ident.email())}" placeholder="ism@email.uz" />
     <input id="hcName" value="${escA(ident.name())}" placeholder="${escA(t("hc_f_name"))}" />
     <span class="mk-id-r"><button class="btn btn-primary" type="button" id="hcIdSave">${esc(t("hc_save"))}</button></span>`;
-  $("#hcIdSave").addEventListener("click", () => {
+  $("#hcIdSave").addEventListener("click", async () => {
     const em = $("#hcEmail").value.trim();
     if(!em.includes("@")) return say($("#hcId"), t("hc_need_email"), "err");
-    ident.setPerson(em, $("#hcName").value.trim());
+    if(!await ident.setPerson(em, $("#hcName").value.trim()))return;
     renderMe();
   });
 }
@@ -318,7 +319,7 @@ function wireMe(){
   if(f) f.addEventListener("submit", async e => {
     e.preventDefault();
     const msg = $("#hcProfMsg");
-    ident.setPerson(ident.email(), $("#cdName").value.trim());
+    if(!await ident.setPerson(ident.email(), $("#cdName").value.trim()))return;
     const r = await api("/api/mehnat/candidate", ident.me({
       headline: $("#cdHeadline").value, region: $("#cdRegion").value, occupation: $("#cdOcc").value,
       seniority: $("#cdSeniority").value, years: $("#cdYears").value, skills: $("#cdSkills").value,
@@ -423,7 +424,7 @@ function renderEmpId(){
          <input id="hcPass" type="password" placeholder="${escA(t("hc_pass"))}" autocomplete="current-password" />
          <button class="btn btn-primary" type="button" id="hcIn">${esc(t("hc_enter"))}</button>
        </span>`;
-  if(c) $("#hcOut").addEventListener("click", () => { ident.setCompany(null); renderEmpId(); renderEmployer(); });
+  if(c) $("#hcOut").addEventListener("click", async () => { await KGAuth.logout(); renderEmpId(); renderEmployer(); });
   else {
     const go = async () => {
       const r = await MK.companyLogin($("#hcLogin").value.trim(), $("#hcPass").value);

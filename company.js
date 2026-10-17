@@ -8,7 +8,7 @@ const L = () => LANGS.indexOf(LANG);
 const $ = (s,r=document)=>r.querySelector(s);
 
 let creds = null, company = null, activeSec = "dashboard";
-try{ creds = JSON.parse(sessionStorage.getItem("kg_co")||"null"); }catch(e){ creds=null; }
+
 
 /* ---- translations ---- */
 const OT = {
@@ -165,7 +165,7 @@ function escA(s){return esc(s).replace(/"/g,"&quot;");}
 
 /* ---- date + charts ---- */
 const MN={uz:["yanvar","fevral","mart","aprel","may","iyun","iyul","avgust","sentabr","oktabr","noyabr","dekabr"],ru:["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
-function fmtDateTime(s){const d=new Date(s);if(isNaN(d))return s||"";return `${d.getDate()} ${MN[LANG][d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
+function fmtDateTime(s){const d=new Date(s);if(isNaN(d))return "";return `${d.getDate()} ${MN[LANG][d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
 function fmtDate(s){const d=new Date(s);if(isNaN(d))return"";return `${d.getDate()} ${MN[LANG][d.getMonth()]} ${d.getFullYear()}`;}
 function shortMonths(){return MN[LANG].map(m=>m.charAt(0).toUpperCase()+m.slice(1,3));}
 const PAL=['#7b7fe0','#5b6fd6','#9a8fe6','#4a5bc0','#b0a9ee'];
@@ -198,32 +198,33 @@ function areaSVG(values,labels){
    ============================================================ */
 function showLogin(){ $("#coLogin").hidden=false; $("#coApp").hidden=true; $("#logoutBtn").hidden=true; $("#aiNav").hidden=true; setTimeout(()=>$("#coLoginInp").focus(),50); }
 async function tryLogin(login,password){
-  const r=await fetch("/api/company/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login,password})});
-  if(!r.ok) return false;
-  const j=await r.json(); company=j.company; creds={login,password};
-  sessionStorage.setItem("kg_co",JSON.stringify(creds)); return true;
+  if(password !== undefined){
+    const target = await kgResolveLogin(login,password);
+    if(target && target !== "company.html"){ location.href=target; return false; }
+    if(!target) return false;
+  }
+  await KGAuth.ready();
+  creds=KGAuth.user(["company"]); if(!creds) return false;
+  const j=await KGAuth.json("/api/company/login",{}); company=j.company; return !!company;
 }
 function startApp(){
   $("#coLogin").hidden=true; $("#coApp").hidden=false; $("#logoutBtn").hidden=false; $("#aiNav").hidden=false;
   $("#coName").textContent=company.name||"—";
   $("#coAssoc").textContent=(company.assocI18n && company.assocI18n[LANG]) || company.assocName || "";
   $("#coSector").textContent=company.sector||"";
-  $("#aiNav").href="assistant.html?panel=company&co="+encodeURIComponent(company.name||"");
+  $("#aiNav").href="assistant.html";
   buildNav();
   showSection(activeSec);
   renderBanner();
   /* the sidebar badge should be right the moment the cabinet opens */
   refreshInquiryCount();
 }
-$("#coForm").addEventListener("submit",async e=>{e.preventDefault();
-  const login=$("#coLoginInp").value.trim(), pass=$("#coPassInp").value;
-  if(await tryLogin(login,pass)){ $("#coErr").textContent=""; startApp(); return; }
-  // not a company account → maybe admin / super-admin / association: route them there
-  const target=await kgResolveLogin(login,pass);
-  if(target && target!=="company.html"){ location.href=target; return; }
-  $("#coErr").textContent=ot("err");
+$("#coForm").addEventListener("submit",async e=>{
+ e.preventDefault();const login=$("#coLoginInp").value.trim(),password=$("#coPassInp").value;$("#coPassInp").value="";
+ try{const target=await kgResolveLogin(login,password);if(target==="company.html"&&await tryLogin()){ $("#coErr").textContent="";startApp();return;}if(target){location.href=target;return;}$("#coErr").textContent=ot("err");}
+ catch(e){$("#coErr").textContent=e.message;}
 });
-$("#logoutBtn").addEventListener("click",()=>{ sessionStorage.removeItem("kg_co"); creds=null; company=null; showLogin(); });
+$("#logoutBtn").addEventListener("click",()=>{ KGAuth.logout().then(()=>location.reload()).catch(e=>UI.alert(e.message)); });
 
 /* ============================================================
    SIDEBAR NAV + SECTIONS
@@ -277,7 +278,7 @@ function showSection(sec){
   if(sec==="bizid") BizIdPanel.mount($("#bizidHost"), creds);
   if(sec==="legal") LegalPanel.mount($("#legalHost"), {
     creds: () => creds, panelClass: "panel co-panel", profileHref: "company.html",
-    onWithdrawn: () => { sessionStorage.removeItem("kg_co"); location.href = "index.html"; } });
+    onWithdrawn: () => { KGAuth.logout().then(()=>{location.href="index.html";}); } });
 }
 
 /* ============================================================
@@ -338,7 +339,7 @@ function renderShowroom(){
   if(!items.length){ grid.innerHTML=`<p class="co-sub sh-empty">${ot(SH_TRADE==="import"?"sh_empty_imp":"sh_empty_exp")}</p>`; }
   else grid.innerHTML=items.map(({it,i})=>`
     <div class="show-card">
-      ${it.img?`<img class="show-img" src="${escA(it.img)}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
+      ${it.img?`<img class="show-img" src="${escA(KGAuth.safeUrl(it.img,true))}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
       <div class="show-body"><b>${esc(it.name)}</b>${it.price?`<span class="show-price">${esc(it.price)}</span>`:""}${it.desc?`<p>${esc(it.desc)}</p>`:""}</div>
       <button class="show-del" data-i="${i}" title="${ot("sh_del")}">✕</button>
     </div>`).join("");
@@ -367,14 +368,15 @@ function fileToScaledDataURL(file, maxDim){
   });
 }
 async function uploadFile(file){
+  if(file.size>8*1024*1024)throw new Error("File too large (8 MiB max)");
   const dataUrl=await fileToScaledDataURL(file);
-  const r=await fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({login:creds.login,password:creds.password,data:dataUrl.split(",")[1],mime:"image/jpeg"})});
-  if(!r.ok) throw new Error("upload");
+  const r=await KGAuth.fetch("/api/upload",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({data:dataUrl.split(",")[1],mime:"image/jpeg"})});
+  if(!r.ok)throw new Error(r.status===413?"File too large (8 MiB max)":"Upload failed");
   return (await r.json()).url;
 }
 async function saveShowroom(){
-  const r=await fetch("/api/company/showroom",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login:creds.login,password:creds.password,items:company.showroom})});
+  const r=await KGAuth.fetch("/api/company/showroom",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:company.showroom})});
   if(r.ok){ const j=await r.json(); company.showroom=j.showroom;
     const sv=$("#shSaved"); sv.textContent=ot("sh_saved"); sv.style.color="var(--green)"; sv.style.opacity=1; clearTimeout(window._sht); window._sht=setTimeout(()=>sv.style.opacity=0,1600); }
 }
@@ -403,24 +405,25 @@ $("#shForm").addEventListener("submit",async e=>{e.preventDefault();
 /* one hop through the server, so a room re-created after scheduling still
    opens from a page the user loaded hours ago */
 function joinUrl(conf){
-  return conf&&conf.id ? "/api/conference/join?id="+encodeURIComponent(conf.id) : (conf&&conf.link)||"#";
+  return conf&&conf.id ? "/api/conference/join?id="+encodeURIComponent(conf.id) : KGAuth.safeUrl(conf&&conf.link)||"#";
 }
 async function renderConference(){
   const body=$("#cfBody");
   let meetings=[];
-  try{ const r=await fetch("/api/conference?list=1&assoc="+encodeURIComponent((company&&company.assocId)||"")); const j=r.ok?await r.json():{}; meetings=j.meetings||[]; }catch(e){}
+  try{ const r=await KGAuth.fetch("/api/conference?list=1&assoc="+encodeURIComponent((company&&company.assocId)||"")); const j=r.ok?await r.json():{}; meetings=j.meetings||[]; }catch(e){}
   if(!meetings.length){ body.innerHTML=`<p class="co-sub">${ot("cf_none")}</p>`; return; }
-  body.innerHTML=meetings.map(conf=>{
+  const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
+  body.replaceChildren(...meetings.map(conf=>{
     const startMs=new Date(conf.datetime).getTime();
     const open=isNaN(startMs)||(startMs-Date.now()<=10*60*1000);
-    return `<div class="cf-card" style="margin-bottom:14px">
-      <span class="co-eyebrow">${ot("cf_when")}: ${fmtDateTime(conf.datetime)}</span>
-      <h3 class="cf-name">${esc(conf.title)}</h3>
-      ${conf.desc?`<p class="co-sub">${esc(conf.desc)}</p>`:""}
-      <p class="cf-status ${open?"open":""}">${open?ot("cf_open"):ot("cf_soon")}</p>
-      <a class="btn btn-primary btn-lg ${open?"":"disabled"}" ${open&&conf.link?`href="${escA(joinUrl(conf))}" target="_blank" rel="noopener"`:""}>${ot("cf_join")}</a>
-    </div>`;
-  }).join("");
+    const card=node("div","cf-card");card.style.marginBottom="14px";
+    card.append(node("span","co-eyebrow",ot("cf_when")+": "+fmtDateTime(conf.datetime)),node("h3","cf-name",conf.title));
+    if(conf.desc)card.append(node("p","co-sub",conf.desc));
+    card.append(node("p","cf-status"+(open?" open":""),open?ot("cf_open"):ot("cf_soon")));
+    const link=node("a","btn btn-primary btn-lg"+(open?"":" disabled"),ot("cf_join"));
+    if(open&&conf.link){link.href=joinUrl(conf);link.target="_blank";link.rel="noopener";}
+    card.append(link);return card;
+  }));
 }
 
 /* ============================================================
@@ -430,8 +433,8 @@ const GOV_STAGE_KEY = { new:"gov_s_new", assoc:"gov_s_assoc", sent:"gov_s_sent",
   answered:"gov_s_answered", rejected:"gov_s_rejected" };
 
 function govApi(body){
-  return fetch("/api/company/appeal",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(Object.assign({login:creds.login,password:creds.password},body))}).then(r=>r.json());
+  return KGAuth.fetch("/api/company/appeal",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(Object.assign({},body))}).then(r=>r.json());
 }
 function govMsg(text, ok=true){
   const m=$("#govMsg"); if(!m) return;
@@ -464,7 +467,7 @@ function govPaint(items){
   const box=$("#govList"); if(!box) return;
   if(!items.length){ box.innerHTML=`<p class="co-sub">${ot("gov_empty")}</p>`; return; }
   box.innerHTML = items.map(a=>{
-    const doc = `/api/appeal/doc?id=${encodeURIComponent(a.id)}&login=${encodeURIComponent(creds.login)}&password=${encodeURIComponent(creds.password)}`;
+    const doc = `/api/appeal/doc?id=${encodeURIComponent(a.id)}`;
     return `<div class="gov-card">
       <div class="gov-card-top">
         <b>${esc(a.subject)}</b>
@@ -492,8 +495,8 @@ document.addEventListener("click", async e=>{
     if(!subject && !hint){ govMsg(ot("gov_need"),false); return; }
     btn.disabled=true; btn.textContent=ot("gov_drafting");
     try{
-      const r=await fetch("/api/appeal/draft",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({login:creds.login,password:creds.password,agency:$("#gov-agency").value,subject,hint,lang:LANG})});
+      const r=await KGAuth.fetch("/api/appeal/draft",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({agency:$("#gov-agency").value,subject,hint,lang:LANG})});
       const j=await r.json();
       if(j.ok && j.text) $("#gov-body").value=j.text; else govMsg(ot("gov_ai_off"),false);
     }catch(err){ govMsg(ot("gov_ai_off"),false); }
@@ -526,8 +529,8 @@ async function inqApi(path, body){
   /* An error must not read as "no enquiries": that would blank the list and
      silently zero the badge while messages are sitting unanswered. */
   try{
-    const r = await fetch(path, { method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify(Object.assign({ login:creds.login, password:creds.password }, body||{})) });
+    const r = await KGAuth.fetch(path, { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(Object.assign({  }, body||{})) });
     const j = await r.json().catch(() => null);
     if(!r.ok || !j || j.error) return { failed:true, error:(j && j.error) || ("http_" + r.status) };
     return j;
@@ -641,7 +644,7 @@ const MOD_CFG={
     map:f=>({title:f["svc-title"],amount:f["svc-price"],status:f["svc-status"],body:f["svc-body"]})},
 };
 async function modApi(module,body){
-  const r=await fetch("/api/company/items",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({login:creds.login,password:creds.password,module},body))});
+  const r=await KGAuth.fetch("/api/company/items",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({module},body))});
   return r.ok?r.json():{items:[]};
 }
 function itemCard(it){
@@ -652,7 +655,7 @@ function itemCard(it){
     <div class="mi-head"><b>${esc(it.title)}</b>${badge}</div>
     ${meta?`<div class="mi-meta">${meta}</div>`:""}
     ${it.body?`<p>${esc(it.body)}</p>`:""}
-    ${it.link?`<a href="${escA(it.link)}" target="_blank" rel="noopener" class="mi-link">${esc(it.link)}</a>`:""}
+    ${it.link?`<a href="${escA(KGAuth.safeUrl(it.link))}" target="_blank" rel="noopener" class="mi-link">${esc(it.link)}</a>`:""}
     <div class="mi-foot"><span>${fmtDate(it.created)}</span>${mine?`<button class="mi-del" data-id="${it.id}">${ot("del")}</button>`:""}</div>
   </div>`;
 }
@@ -680,32 +683,30 @@ Object.keys(MOD_CFG).forEach(module=>{
    NEWS — real articles found on the web, read-only.
    Layered: platform-wide + the company's association + its own sector.
    ============================================================ */
-function newsCard(it){
+function renderCompanyNewsCard(it){
   const badge = it.tier==="global" ? ot("news_tier_global") : (it.scope||"");
-  return `<article class="news-item">
-    ${it.image?`<img class="news-img" src="${escA(it.image)}" alt="" loading="lazy">`:""}
-    <div class="news-text">
-      <div class="mi-head"><b>${esc(it.title)}</b>${badge?`<span class="mi-badge">${esc(badge)}</span>`:""}</div>
-      ${it.body?`<p>${esc(it.body)}</p>`:""}
-      <div class="mi-foot">
-        <span>🕓 ${fmtDateTime(it.time)}</span>
-        ${it.url?`<a class="news-src" href="${escA(it.url)}" target="_blank" rel="noopener noreferrer">${esc(it.source||ot("news_src"))} ↗</a>`:""}
-      </div>
-    </div>
-  </article>`;
+  const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
+  const article=node("article","news-item"),text=node("div","news-text"),head=node("div","mi-head"),foot=node("div","mi-foot");
+  const imageUrl=KGAuth.safeUrl(it.image,true);if(imageUrl){const image=node("img","news-img");image.src=imageUrl;image.alt="";image.loading="lazy";article.append(image);}
+  head.append(node("b","",it.title));if(badge)head.append(node("span","mi-badge",badge));text.append(head);
+  if(it.body)text.append(node("p","",it.body));foot.append(node("span","","🕓 "+fmtDateTime(it.time)));
+  const href=KGAuth.safeUrl(it.url);if(href){const link=node("a","news-src",(it.source||ot("news_src"))+" ↗");link.href=href;link.target="_blank";link.rel="noopener noreferrer";foot.append(link);}
+  text.append(foot);article.append(text);return article;
 }
 async function renderSectorNews(){
   const box=$("#newsList");
   box.innerHTML=`<p class="co-sub">${ot("news_loading")}</p>`;
   try{
-    const r=await fetch("/api/company/news",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({login:creds.login,password:creds.password,lang:LANG})});
+    const r=await KGAuth.fetch("/api/company/news",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({lang:LANG})});
     const j=r.ok?await r.json():{items:[]};
     const items=j.items||[];
-    box.innerHTML=items.length?items.map(newsCard).join(""):`<p class="co-sub">${ot("news_empty")}</p>`;
+    box.replaceChildren();
+    if(items.length)box.append(...items.map(renderCompanyNewsCard));
+    else{const empty=document.createElement("p");empty.className="co-sub";empty.textContent=ot("news_empty");box.append(empty);}
     // a source image that no longer resolves should leave no gap in the card
     box.querySelectorAll(".news-img").forEach(img=>img.addEventListener("error",()=>img.remove()));
-  }catch(e){ box.innerHTML=`<p class="co-sub">${ot("news_empty")}</p>`; }
+  }catch(e){const empty=document.createElement("p");empty.className="co-sub";empty.textContent=ot("news_empty");box.replaceChildren(empty);}
 }
 
 /* ============================================================
@@ -737,20 +738,20 @@ function drawBdTable(){
 }
 $("#bdAddRow").addEventListener("click",()=>{ bdRows.push({product:"",sales:"",price:"",composition:"",note:""}); drawBdTable(); });
 $("#bdSave").addEventListener("click",async()=>{
-  const r=await fetch("/api/company/data",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({login:creds.login,password:creds.password,rows:bdRows})});
+  const r=await KGAuth.fetch("/api/company/data",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({rows:bdRows})});
   if(r.ok){ const j=await r.json(); company.bizrows=j.rows; bdRows=(j.rows||[]).map(x=>Object.assign({product:"",sales:"",price:"",composition:"",note:""},x));
     const sv=$("#bdSaved"); sv.textContent=ot("bd_saved"); sv.style.color="var(--green)"; sv.style.opacity=1; clearTimeout(window._bdt); window._bdt=setTimeout(()=>sv.style.opacity=0,1600); }
 });
 $("#bdAnalyze").addEventListener("click",async()=>{
   if(!bdRows.some(r=>BD_COLS.some(c=>(r[c]||"").trim()))){ showBdAnalysis(ot("bd_empty")); return; }
   // save first so the server analyzes the latest data
-  await fetch("/api/company/data",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({login:creds.login,password:creds.password,rows:bdRows})});
+  await KGAuth.fetch("/api/company/data",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({rows:bdRows})});
   const btn=$("#bdAnalyze"); const old=btn.innerHTML; btn.disabled=true; btn.textContent=ot("bd_analyzing");
   try{
-    const r=await fetch("/api/company/analyze",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({login:creds.login,password:creds.password,lang:LANG})});
+    const r=await KGAuth.fetch("/api/company/analyze",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({lang:LANG})});
     const j=r.ok?await r.json():{};
     if(j.analysis) showBdAnalysis(j.analysis, ot("bd_ahead")); else showBdAnalysis(ot("bd_aoff"));
   }catch(e){ showBdAnalysis(ot("bd_aoff")); }
@@ -767,7 +768,7 @@ function showBdAnalysis(text, head){
    BANNER
    ============================================================ */
 async function renderBanner(){
-  try{ const r=await fetch("/api/conference?assoc="+encodeURIComponent((company&&company.assocId)||"")); const c=r.ok?await r.json():{}; const b=$("#coBanner"); if(!b)return;
+  try{ const r=await KGAuth.fetch("/api/conference?assoc="+encodeURIComponent((company&&company.assocId)||"")); const c=r.ok?await r.json():{}; const b=$("#coBanner"); if(!b)return;
     if(c&&c.title){ b.hidden=false;
       b.innerHTML=`<span class="cb-ic">📢</span><span class="cb-text"><b>${ot("nav_meeting")}:</b> ${esc(c.title)}${c.datetime?` · ${fmtDateTime(c.datetime)}`:""}</span>`+(c.link?`<a class="btn btn-primary cb-join" href="${escA(joinUrl(c))}" target="_blank" rel="noopener">${ot("cf_join")}</a>`:"");
     } else b.hidden=true;
@@ -814,6 +815,6 @@ themeBtn.addEventListener("click",()=>setTheme(document.documentElement.dataset.
   setTheme(localStorage.getItem("kg_theme")||"light");
   document.documentElement.lang=LANG; $("#langBtn").textContent=LANG.toUpperCase();
   applyStatic();
-  if(creds && await tryLogin(creds.login,creds.password)) startApp();
+  if(await tryLogin()) startApp();
   else showLogin();
 })();

@@ -8,13 +8,13 @@ if(!LANGS.includes(LANG)) LANG = "uz";
 const L = () => LANGS.indexOf(LANG);
 const $ = (s,r=document)=>r.querySelector(s);
 
-let creds = null;          // {login, password}
+let creds = null;          // server session metadata
 let assoc = null;          // {id, name, chairman}
 let companies = [];
 let CONF_ACTIVE = false;
 let CUR_YM = "";
 let activeView = "dashboard";
-try{ creds = JSON.parse(sessionStorage.getItem("kg_as")||"null"); }catch(e){ creds=null; }
+
 
 function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
 function escA(s){return esc(s).replace(/"/g,"&quot;");}
@@ -22,7 +22,7 @@ function escA(s){return esc(s).replace(/"/g,"&quot;");}
 const aName = a => (a && a.i18n && a.i18n[LANG]) || (a && a.name) || "";
 const MN={uz:["yan","fev","mar","apr","may","iyn","iyl","avg","sen","okt","noy","dek"],ru:["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]};
 const MNF={uz:["yanvar","fevral","mart","aprel","may","iyun","iyul","avgust","sentabr","oktabr","noyabr","dekabr"],ru:["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
-function fmtDateTime(s){const d=new Date(s);if(isNaN(d))return s||"";return `${d.getDate()} ${MNF[LANG][d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
+function fmtDateTime(s){const d=new Date(s);if(isNaN(d))return "";return `${d.getDate()} ${MNF[LANG][d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
 
 /* ---- translations ---- */
 const AT = {
@@ -212,10 +212,9 @@ const VIEW_TITLE = {legal:"nav_legal",bizid:"nav_bizid",dashboard:"nav_dash",reg
    API helpers
    ============================================================ */
 function assocReq(path, body){
-  return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(Object.assign({login:creds.login,password:creds.password},body))}).then(r=>r.json());
+  return KGAuth.fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(Object.assign({},body))}).then(r=>r.json());
 }
-function credQ(){ return "login="+encodeURIComponent(creds.login)+"&password="+encodeURIComponent(creds.password); }
 
 /* ============================================================
    VIEW: DASHBOARD
@@ -331,7 +330,7 @@ function renderCompanyDetail(view){
   const row=(l,v)=>`<tr><td style="color:var(--muted);width:200px">${l}</td><td>${v}</td></tr>`;
   const grid=prods.length?prods.map(p=>`
     <div class="show-card">
-      ${p.img?`<img class="show-img" src="${escA(p.img)}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
+      ${p.img?`<img class="show-img" src="${escA(KGAuth.safeUrl(p.img,true))}" alt="" loading="lazy">`:`<div class="show-img show-img-ph">🛍️</div>`}
       <div class="show-body"><b>${esc(p.name)}</b>${p.price?`<span class="show-price">${esc(p.price)}</span>`:""}${p.desc?`<p>${esc(p.desc)}</p>`:""}</div>
     </div>`).join(""):`<p class="ac-label">${t("cd_empty")}</p>`;
   view.innerHTML=`
@@ -418,13 +417,13 @@ function openLetter(ltr){
 function newsCard(it){
   const badge = it.tier==="global" ? t("news_tier_global") : (it.scope||"");
   return `<article class="news-item">
-    ${it.image?`<img class="news-img" src="${escA(it.image)}" alt="" loading="lazy">`:""}
+    ${it.image?`<img class="news-img" src="${escA(KGAuth.safeUrl(it.image,true))}" alt="" loading="lazy">`:""}
     <div class="news-text">
       <div class="mi-head"><b>${esc(it.title)}</b>${badge?`<span class="mi-badge">${esc(badge)}</span>`:""}</div>
       ${it.body?`<p>${esc(it.body)}</p>`:""}
       <div class="mi-foot">
         <span>🕓 ${fmtDateTime(it.time)}</span>
-        ${it.url?`<a class="news-src" href="${escA(it.url)}" target="_blank" rel="noopener noreferrer">${esc(it.source||t("news_src"))} ↗</a>`:""}
+        ${it.url?`<a class="news-src" href="${escA(KGAuth.safeUrl(it.url))}" target="_blank" rel="noopener noreferrer">${esc(it.source||t("news_src"))} ↗</a>`:""}
       </div>
     </div>
   </article>`;
@@ -463,7 +462,7 @@ function renderReport(){
     assocReq("/api/assoc/report",{ym}).then(d=>{
       if(d.error) return;
       const m=$("#repMonth"); if(!m.value) m.value=d.ym;
-      $("#repDl").href="/api/assoc/report.doc?"+credQ()+"&ym="+encodeURIComponent(d.ym);
+      $("#repDl").href="/api/assoc/report.doc?ym="+encodeURIComponent(d.ym);
       const comps=d.companies||[];
       $("#repPreview").innerHTML=comps.length
         ? `<p class="ac-label" style="margin-bottom:10px">${t("rep_count")}: <b>${d.companyCount}</b> · ${t("rep_q")}: <b>${d.questions}</b></p>
@@ -496,7 +495,7 @@ function apPaint(items){
   const box=$("#apList"); if(!box) return;
   if(!items.length){ box.innerHTML=`<p class="ac-label">${t("ap_empty")}</p>`; return; }
   box.innerHTML=items.map(a=>{
-    const doc=`/api/appeal/doc?id=${encodeURIComponent(a.id)}&login=${encodeURIComponent(creds.login)}&password=${encodeURIComponent(creds.password)}`;
+    const doc=`/api/appeal/doc?id=${encodeURIComponent(a.id)}`;
     // once it has left the association there is nothing more for it to decide
     const open = a.stage==="new";
     return `<div class="gov-card">
@@ -542,7 +541,7 @@ function confJoinHtml(m){
 function confRoomHtml(m){
   if(m.link){
     const badge = m.provider==="meet-bot" ? t("conf_meet_auto") : t("conf_meet_manual");
-    return `<a href="${escA(m.link)}" target="_blank" rel="noopener">${esc(m.link)}</a><span class="ac-sub">${badge}</span>`;
+    return `<a href="${escA(KGAuth.safeUrl(m.link))}" target="_blank" rel="noopener">${esc(m.link)}</a><span class="ac-sub">${badge}</span>`;
   }
   const why = m.meetError==="google_not_connected" ? t("conf_meet_off") : `${t("conf_meet_err")}${m.meetError?" · "+esc(m.meetError):""}`;
   return `<span class="ac-sub" style="color:var(--gold)">${why}</span> <button class="btn btn-ghost conf-relink" data-id="${m.id}" style="padding:4px 10px;font-size:12px">${t("conf_meet_retry")}</button>`;
@@ -607,7 +606,7 @@ function renderView(){
   if(activeView==="conference") renderConference();
   if(activeView==="legal") LegalPanel.mount($("#view-legal"), {
     creds: () => creds, panelClass: "admin-panel", profileHref: "association.html",
-    onWithdrawn: () => { sessionStorage.removeItem("kg_as"); location.href = "index.html"; } });
+    onWithdrawn: () => { KGAuth.logout().then(()=>{location.href="index.html";}); } });
   if(activeView==="appeals") renderAppeals();
   if(activeView==="bizid") BizIdPanel.mount($("#bizidHost"), creds);
   $("#viewTitle").textContent=t(VIEW_TITLE[activeView]);
@@ -639,12 +638,14 @@ function showPublicChrome(on){
 }
 function showLogin(){ $("#asLogin").hidden=false; $("#asShell").hidden=true; showPublicChrome(false); setTimeout(()=>$("#asLoginInp").focus(),50); }
 async function tryLogin(login,password){
-  const r=await fetch("/api/assoc/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({login,password})});
-  if(!r.ok) return false;
-  const j=await r.json();
-  assoc=j.assoc; companies=j.companies||[]; creds={login,password};
-  sessionStorage.setItem("kg_as",JSON.stringify(creds));
-  return true;
+  if(password !== undefined){
+    const target=await kgResolveLogin(login,password);
+    if(target && target!=="association.html"){location.href=target;return false;}
+    if(!target)return false;
+  }
+  await KGAuth.ready();creds=KGAuth.user(["assoc"]);if(!creds)return false;
+  const j=await KGAuth.json("/api/assoc/login",{});
+  assoc=j.assoc;companies=j.companies||[];return !!assoc;
 }
 /* The sidebar used to read "Super Admin", which says what the account is
    rather than which association it belongs to. Once signed in it carries the
@@ -660,16 +661,16 @@ function paintBrand(){
 async function startApp(){
   $("#asLogin").hidden=true; showPublicChrome(false); $("#asShell").hidden=false;
   paintBrand();
-  $("#aiNav").href="assistant.html?panel=assoc&co="+encodeURIComponent(aName(assoc));
+  $("#aiNav").href="assistant.html";
   // detect an active meeting for the dashboard KPI
-  try{ const r=await fetch("/api/conference?assoc="+encodeURIComponent(assoc.id)); const c=r.ok?await r.json():{}; CONF_ACTIVE=!!(c&&c.title); }catch(e){}
+  try{ const r=await KGAuth.fetch("/api/conference?assoc="+encodeURIComponent(assoc.id)); const c=r.ok?await r.json():{}; CONF_ACTIVE=!!(c&&c.title); }catch(e){}
   buildNav(); renderView();
   /* so the sidebar badge shows waiting applications straight away */
   refreshRegCount();
 }
 async function loadPublic(id){
   try{
-    const r=await fetch("/api/assoc/public?id="+encodeURIComponent(id));
+    const r=await KGAuth.fetch("/api/assoc/public?id="+encodeURIComponent(id));
     if(!r.ok){ location.href="associations.html"; return; }
     const j=await r.json();
     $("#asLogin").hidden=true; $("#asShell").hidden=true; showPublicChrome(true);
@@ -682,31 +683,29 @@ async function loadPublic(id){
        clickable — a company with nothing in the showroom yet used to render
        as a dead card. The Business ID sits beside it as its own control,
        outside the card's <a>, because anchors cannot nest. */
-    else grid.innerHTML=j.companies.map(c=>{
-      const inner=`
-        <span class="dir-mark">${esc((c.name||"?").charAt(0).toUpperCase())}</span>
-        <span class="dir-body"><b>${esc(c.name)}</b><em>${esc(c.sector)||"&nbsp;"}</em>
-          ${c.products?`<span class="dir-count">🛍️ ${c.products}</span>`:""}</span>`;
-      const href = c.bizId ? "korxona.html?id="+encodeURIComponent(c.bizId) : "";
-      return `<div class="dir-item">
-        ${href
-          ? `<a class="dir-card" href="${href}">${inner}<span class="dir-open">${esc(t("open"))}</span></a>`
-          : `<div class="dir-card" style="cursor:default">${inner}</div>`}
-        ${c.bizId?`<a class="dir-bizbtn" href="biznes-id.html?id=${encodeURIComponent(c.bizId)}"
-          title="Business ID">${esc(c.bizId)}</a>`:""}
-      </div>`;
-    }).join("");
+    else{
+      const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el;};
+      grid.replaceChildren(...j.companies.map(c=>{
+        const row=node("div","dir-item"),card=node(c.bizId?"a":"div","dir-card"),body=node("span","dir-body");
+        card.append(node("span","dir-mark",String(c.name||"?").charAt(0).toUpperCase()));
+        body.append(node("b","",c.name),node("em","",c.sector||"\u00a0"));
+        if(Number(c.products))body.append(node("span","dir-count","🛍️ "+Number(c.products)));
+        card.append(body);
+        if(c.bizId){card.href="korxona.html?id="+encodeURIComponent(c.bizId);card.append(node("span","dir-open",t("open")));}
+        else card.style.cursor="default";
+        row.append(card);
+        if(c.bizId){const link=node("a","dir-bizbtn",c.bizId);link.href="biznes-id.html?id="+encodeURIComponent(c.bizId);link.title="Business ID";row.append(link);}
+        return row;
+      }));
+    }
   }catch(e){ location.href="associations.html"; }
 }
-$("#asForm").addEventListener("submit",async e=>{e.preventDefault();
-  const login=$("#asLoginInp").value.trim(), pass=$("#asPassInp").value;
-  if(await tryLogin(login,pass)){ $("#asErr").textContent=""; startApp(); return; }
-  // not an association account → maybe admin / super-admin / company: route them there
-  const target=await kgResolveLogin(login,pass);
-  if(target && target!=="association.html"){ location.href=target; return; }
-  $("#asErr").textContent=t("err");
+$("#asForm").addEventListener("submit",async e=>{
+ e.preventDefault();const login=$("#asLoginInp").value.trim(),password=$("#asPassInp").value;$("#asPassInp").value="";
+ try{const target=await kgResolveLogin(login,password);if(target==="association.html"&&await tryLogin()){ $("#asErr").textContent="";startApp();return;}if(target){location.href=target;return;}$("#asErr").textContent=t("err");}
+ catch(e){$("#asErr").textContent=e.message;}
 });
-$("#logoutBtn").addEventListener("click",()=>{ sessionStorage.removeItem("kg_as"); creds=null; assoc=null; location.href= PAGE_ID ? "association.html?id="+encodeURIComponent(PAGE_ID) : "associations.html"; });
+$("#logoutBtn").addEventListener("click",()=>{ KGAuth.logout().then(()=>{location.href=PAGE_ID?"association.html?id="+encodeURIComponent(PAGE_ID):"associations.html";}).catch(e=>UI.alert(e.message)); });
 
 /* ---- letter modal ---- */
 $("#ltrClose").addEventListener("click",()=>$("#letterModal").hidden=true);
@@ -723,8 +722,8 @@ let REG_PENDING = 0;
 let REG_TAB = "pending";
 
 function regApi(path, data){
-  return fetch("/api/register/" + path, { method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify(Object.assign({ login:creds.login, password:creds.password }, data||{})) })
+  return KGAuth.fetch("/api/register/" + path, { method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(Object.assign({  }, data||{})) })
     .then(r=>r.json()).catch(()=>({ error:"network" }));
 }
 
@@ -773,7 +772,7 @@ async function renderRegistrations(){
       <div class="rq-contact">
         ${a.email?`<a href="mailto:${escA(a.email)}">✉ ${esc(a.email)}</a>`:""}
         ${tel?`<a href="tel:${escA(tel)}">📞 ${esc(a.phone)}</a>`:""}
-        ${a.website?`<a href="${escA(a.website)}" target="_blank" rel="noopener noreferrer">🔗 ${esc(a.website)}</a>`:""}
+        ${a.website?`<a href="${escA(KGAuth.safeUrl(a.website))}" target="_blank" rel="noopener noreferrer">🔗 ${esc(a.website)}</a>`:""}
       </div>
       ${a.reason?`<p class="rq-reason">${esc(t("rq_reason"))}: ${esc(a.reason)}</p>`:""}
       ${a.status==="pending" ? `<div class="rq-actions">
@@ -847,10 +846,7 @@ themeBtn.addEventListener("click",()=>setTheme(document.documentElement.dataset.
   if(PAGE_ID){ loadPublic(PAGE_ID); return; }
 
   // No id → this is the panel. Re-verify any stored session against the server
-  // rather than trusting sessionStorage, then open it.
-  if(creds && creds.login){
-    if(await tryLogin(creds.login, creds.password)){ startApp(); return; }
-    sessionStorage.removeItem("kg_as"); creds=null;
-  }
+  // then open the panel only for the authenticated association.
+  if(await tryLogin()){ startApp(); return; }
   showLogin();
 })();

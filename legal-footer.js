@@ -114,7 +114,7 @@
   }
 
   let CFG = null;
-  fetch("/api/legal")
+  KGAuth.fetch("/api/legal")
     .then(r => r.json())
     .then(j => { if(j && j.ok){ CFG = j; draw(j); } })
     /* A footer that cannot reach the API should not break the page it is on. */

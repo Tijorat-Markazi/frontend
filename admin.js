@@ -11,7 +11,7 @@ const AT = {
   lg_title:["Admin panel","Админ-панель","Admin panel"],
   lg_sub:["TIJORAT MARKAZI boshqaruv paneli","Панель управления TIJORAT MARKAZI","TIJORAT MARKAZI control panel"],
   lg_btn:["Kirish","Войти","Sign In"],
-  lg_hint:["Demo parol: admin","Демо-пароль: admin","Demo password: admin"],
+  lg_hint:["Hisobingiz bilan kiring.","Войдите в свою учётную запись.","Sign in with your account."],
   lg_err:["Noto'g'ri parol","Неверный пароль","Wrong password"],
   logout:["Chiqish","Выход","Logout"],
   back:["← Saytga qaytish","← Вернуться на сайт","← Back to site"],
@@ -279,8 +279,8 @@ const VIEW_TITLE = {dashboard:"nav_dash",associations:"nav_assoc",members:"nav_m
 /* ---- shared org state + API ---- */
 let ORGS = { associations:[], companies:[] };
 function orgsApi(body){
-  return fetch("/api/orgs",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(Object.assign({pass:"admin"},body))}).then(r=>r.json());
+  return KGAuth.fetch("/api/orgs",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(Object.assign({},body))}).then(r=>r.json());
 }
 
 /* ---- storage helpers ---- */
@@ -339,8 +339,8 @@ function renderDashboard(){
 function renderCompanies(){
   const list=store.get("kg_companies",[]);
   const rows=list.map((c,i)=>`<tr>
-    <td><b>${c.name}</b></td><td>${c.sector}</td>
-    <td><span class="badge-st on">${t("on")}</span></td><td>${c.invest||"—"}</td>
+    <td><b>${escAttr(c.name)}</b></td><td>${escAttr(c.sector)}</td>
+    <td><span class="badge-st on">${t("on")}</span></td><td>${escAttr(c.invest)||"—"}</td>
     <td><button class="tdel" data-i="${i}">${t("del")}</button></td></tr>`).join("");
   $("#view-companies").innerHTML=`
     <div class="admin-panel">
@@ -363,7 +363,7 @@ function renderCompanies(){
 function renderLeads(){
   const list=store.get("kg_leads",[]);
   const rows=list.slice().reverse().map((x,ri)=>{const i=list.length-1-ri;return `<tr>
-    <td><b>${x.name}</b></td><td>${x.company}</td><td>${x.email}</td><td>${x.date}</td>
+    <td><b>${escAttr(x.name)}</b></td><td>${escAttr(x.company)}</td><td>${escAttr(x.email)}</td><td>${escAttr(x.date)}</td>
     <td><button class="tdel" data-i="${i}">${t("del")}</button></td></tr>`;}).join("");
   $("#view-leads").innerHTML=`
     <div class="admin-panel">
@@ -375,7 +375,7 @@ function renderLeads(){
     list.splice(+b.dataset.i,1);store.set("kg_leads",list);renderLeads();}));
 }
 
-function escAttr(s){return String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+function escAttr(s){return KGAuth.escape(s);}
 /** An association's name in the active language. */
 const aName = a => (a && a.i18n && a.i18n[LANG]) || (a && a.name) || "";
 
@@ -537,7 +537,7 @@ function renderMembers(){
 /* ---- questions report + official letters (merged from rais panel) ---- */
 let CUR_YM="";
 function raisApi(path,body){
-  return fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({pass:"admin"},body))}).then(r=>r.json());
+  return KGAuth.fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({},body))}).then(r=>r.json());
 }
 function renderQuestions(){
   const view=$("#view-questions");
@@ -665,7 +665,7 @@ function renderProjectChat(){
   const renderThreadUI=(cid,name,msgs)=>{
     view.innerHTML=`<button class="btn btn-ghost" id="chBack" style="margin-bottom:14px">${t("ch_back")}</button>
       <div class="admin-panel"><h2>💬 ${escAttr(name)}</h2>
-        <div class="pchat-box" id="chBox">${msgs.length?msgs.map(m=>`<div class="pchat-msg ${m.from}"><span>${escAttr(m.text)}</span></div>`).join(""):`<p class="ac-label">${t("ch_empty")}</p>`}</div>
+        <div class="pchat-box" id="chBox">${msgs.length?msgs.map(m=>`<div class="pchat-msg ${m.from==="company"?"company":"admin"}"><span>${escAttr(m.text)}</span></div>`).join(""):`<p class="ac-label">${t("ch_empty")}</p>`}</div>
         <form class="admin-form" id="chForm" style="margin-top:12px;grid-template-columns:1fr auto">
           <input id="ch-text" placeholder="${t("ch_ph")}" required autocomplete="off"><button class="btn btn-primary" type="submit">${t("ch_send")}</button>
         </form>
@@ -695,9 +695,9 @@ function renderReport(){
     </div>`;
   const load=(ym)=>{
     $("#repDl").href="/api/monthly.doc?ym="+ym;
-    fetch("/api/monthly?ym="+ym).then(r=>r.json()).then(d=>{
+    KGAuth.fetch("/api/monthly?ym="+ym).then(r=>r.json()).then(d=>{
       const head=`<th>#</th><th>${t("rep_org")}</th><th>${t("rep_chair")}</th><th style="text-align:center">${t("rep_comp")}</th><th style="text-align:center">${t("rep_prod")}</th><th style="text-align:center">${t("rep_inv")}</th><th style="text-align:center">${t("rep_news")}</th><th style="text-align:center">R&D</th><th style="text-align:center">${t("rep_q")}</th>`;
-      const rows=d.rows.map(r=>`<tr><td>${r.n}</td><td><b>${r.name}</b></td><td>${r.chairman}</td><td style="text-align:center">${r.companies}</td><td style="text-align:center">${r.products}</td><td style="text-align:center">${r.invest}</td><td style="text-align:center">${r.news}</td><td style="text-align:center">${r.rnd}</td><td style="text-align:center">${r.questions}</td></tr>`).join("");
+      const rows=d.rows.map(r=>`<tr><td>${r.n}</td><td><b>${escAttr(r.name)}</b></td><td>${escAttr(r.chairman)}</td><td style="text-align:center">${r.companies}</td><td style="text-align:center">${r.products}</td><td style="text-align:center">${r.invest}</td><td style="text-align:center">${r.news}</td><td style="text-align:center">${r.rnd}</td><td style="text-align:center">${r.questions}</td></tr>`).join("");
       const tt=d.totals;
       const totalRow=`<tr style="font-weight:700;background:var(--bg-soft-2)"><td></td><td>${t("rep_total")}</td><td></td><td style="text-align:center">${tt.companies}</td><td style="text-align:center">${tt.products}</td><td style="text-align:center">${tt.invest}</td><td style="text-align:center">${tt.news}</td><td style="text-align:center">${tt.rnd}</td><td style="text-align:center">${tt.questions}</td></tr>`;
       $("#repPreview").innerHTML=`<p class="ac-label" style="margin-bottom:10px">${t("rep_orgs")}: <b>${d.organizations}</b></p><div style="overflow:auto"><table class="admin-table" style="font-size:13px">${"<thead><tr>"+head+"</tr></thead>"}<tbody>${rows}${totalRow}</tbody></table></div>`;
@@ -744,20 +744,20 @@ function renderConference(){
         ? meetings.map(m=>`<div class="conf-row"><div class="conf-row-main"><b>${escAttr(m.title)}</b><span>${escAttr(confDT(m.datetime))}${m.desc?" · "+escAttr(m.desc):""}</span>${confRoomHtml(m)}</div><div class="conf-row-act">${confJoinHtml(m)}<button class="tdel" data-id="${m.id}">${t("del")}</button></div></div>`).join("")
         : `<p class="ac-label">${t("conf_none_list")}</p>`;
       box.querySelectorAll(".tdel").forEach(b=>b.addEventListener("click",()=>{
-        fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({pass:"admin",assocId:targetId(),removeId:b.dataset.id})}).then(r=>r.json()).then(j=>paint(j.meetings));}));
+        KGAuth.fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({assocId:targetId(),removeId:b.dataset.id})}).then(r=>r.json()).then(j=>paint(j.meetings));}));
       // a meeting saved while Google was unreachable can get its room later
       box.querySelectorAll(".conf-relink").forEach(b=>b.addEventListener("click",()=>{
         b.disabled=true; b.textContent=t("conf_meet_making");
-        fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({pass:"admin",assocId:targetId(),relinkId:b.dataset.id})})
+        KGAuth.fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({assocId:targetId(),relinkId:b.dataset.id})})
           .then(r=>r.json()).then(j=>{ paint(j.meetings); msg(j.ok?t("conf_meet_ready"):t("conf_meet_err"), !!j.ok); })
           .catch(()=>{ b.disabled=false; b.textContent=t("conf_meet_retry"); msg("Error",false); });}));
     };
     const loadTarget=()=>{
       const id=targetId();
       $("#confScope").textContent = id ? t("conf_for_assoc") : t("conf_for_global");
-      fetch("/api/conference?manage=1&assoc="+encodeURIComponent(id)).then(r=>r.json()).then(j=>paint(j.meetings)).catch(()=>{});
+      KGAuth.fetch("/api/conference?manage=1&assoc="+encodeURIComponent(id)).then(r=>r.json()).then(j=>paint(j.meetings)).catch(()=>{});
     };
     $("#conf-target").addEventListener("change",loadTarget);
     loadTarget();
@@ -765,8 +765,8 @@ function renderConference(){
       const link=$("#conf-link").value.trim();     // empty → the bot opens a Meet room for it
       if(link && !/^https?:\/\/.+/i.test(link)){msg(t("conf_link_err"),false);return;}
       const btn=$("#confForm button[type=submit]"); btn.disabled=true; btn.textContent=t("conf_meet_making");
-      fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({pass:"admin",assocId:targetId(),title:$("#conf-title").value.trim(),datetime:$("#conf-dt").value,link,desc:$("#conf-desc").value.trim()})})
+      KGAuth.fetch("/api/conference",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({assocId:targetId(),title:$("#conf-title").value.trim(),datetime:$("#conf-dt").value,link,desc:$("#conf-desc").value.trim()})})
         .then(r=>r.json()).then(j=>{ paint(j.meetings); $("#confForm").reset();
           const m=j.meeting||{};
           msg(m.provider==="meet-bot"?t("conf_meet_ready"):(m.link?t("conf_added"):t("conf_meet_off")), !!m.link); })
@@ -782,7 +782,7 @@ function confDT(s){const d=new Date(s);if(isNaN(d))return s||"";return d.toLocal
 function confRoomHtml(m){
   if(m.link){
     const badge = m.provider==="meet-bot" ? t("conf_meet_auto") : t("conf_meet_manual");
-    return `<a href="${escAttr(m.link)}" target="_blank" rel="noopener">${escAttr(m.link)}</a><span class="ac-sub">${badge}</span>`;
+    return `<a href="${escAttr(KGAuth.safeUrl(m.link))}" target="_blank" rel="noopener">${escAttr(KGAuth.safeUrl(m.link))}</a><span class="ac-sub">${badge}</span>`;
   }
   const why = m.meetError==="google_not_connected" ? t("conf_meet_off") : `${t("conf_meet_err")}${m.meetError?" · "+escAttr(m.meetError):""}`;
   return `<span class="ac-sub" style="color:var(--gold)">${why}</span> <button class="btn btn-ghost conf-relink" data-id="${m.id}" style="padding:4px 10px;font-size:12px">${t("conf_meet_retry")}</button>`;
@@ -799,8 +799,8 @@ function confJoinHtml(m){
    ============================================================ */
 const AP_STAGE_KEY = { new:"ap_s_new", assoc:"ap_s_assoc", sent:"ap_s_sent",
   answered:"ap_s_answered", rejected:"ap_s_rejected" };
-const apApi = body => fetch("/api/appeals",{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify(Object.assign({pass:"admin"},body))}).then(r=>r.json());
+const apApi = body => KGAuth.fetch("/api/appeals",{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify(Object.assign({},body))}).then(r=>r.json());
 
 function renderAppeals(){
   $("#view-appeals").innerHTML=`
@@ -815,7 +815,7 @@ function apPaint(items){
   const box=$("#apList"); if(!box) return;
   if(!items.length){ box.innerHTML=`<p class="ac-label">${t("ap_empty")}</p>`; return; }
   box.innerHTML=items.map(a=>{
-    const doc=`/api/appeal/doc?id=${encodeURIComponent(a.id)}&pass=admin`;
+    const doc=`/api/appeal/doc?id=${encodeURIComponent(a.id)}`;
     // what the rais can do next depends on where the appeal has got to
     const acts = a.stage==="assoc" ? [["sent","btn-primary","ap_send"],["rejected","btn-ghost","ap_reject"]]
               : a.stage==="sent"  ? [["answered","btn-primary","ap_answer"],["rejected","btn-ghost","ap_reject"]]
@@ -855,8 +855,8 @@ function apTrail(a){
    is where every other credential on the platform comes from.
    ============================================================ */
 function analystApi(body){
-  return fetch("/api/analyst/accounts",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(Object.assign({pass:"admin"},body))}).then(r=>r.json()).catch(()=>({error:"network"}));
+  return KGAuth.fetch("/api/analyst/accounts",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(Object.assign({},body))}).then(r=>r.json()).catch(()=>({error:"network"}));
 }
 
 /* ============================================================
@@ -884,8 +884,8 @@ const dsrLang = () => Math.max(0, ["uz","ru","en"].indexOf(localStorage.getItem(
 
 async function renderDsr(){
   const view = $("#view-dsr");
-  const r = await fetch("/api/legal/requests", { method:"POST",
-    headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ pass:"admin" }) }).then(x=>x.json());
+  const r = await KGAuth.fetch("/api/legal/requests", { method:"POST",
+    headers:{ "Content-Type":"application/json" }, body:JSON.stringify({}) }).then(x=>x.json());
   const items = (r && r.items) || [];
   const li = dsrLang();
 
@@ -922,8 +922,8 @@ async function renderDsr(){
     const text = (box.value || "").trim();
     if(!text){ $("#dsrErr").textContent = t("dsr_need_ans"); box.focus(); return; }
     $("#dsrErr").textContent = "";
-    await fetch("/api/legal/answer", { method:"POST", headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify({ pass:"admin", id:tr.dataset.id, answer:text, refuse:!!refuse }) });
+    await KGAuth.fetch("/api/legal/answer", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({id:tr.dataset.id, answer:text, refuse:!!refuse }) });
     renderDsr();
   };
   view.querySelectorAll(".dsr-ok").forEach(b => b.addEventListener("click", () => answer(b.closest("tr"), false)));
@@ -1031,12 +1031,12 @@ function renderSettings(){
 }
 
 /* ---- the Google session the Meet bot drives ---- */
-const gPost=(p)=>fetch("/api/google/"+p,{method:"POST",headers:{"Content-Type":"application/json"},
-  body:JSON.stringify({pass:"admin"})}).then(r=>r.json());
+const gPost=(p)=>KGAuth.fetch("/api/google/"+p,{method:"POST",headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({})}).then(r=>r.json());
 
 function renderGoogleCard(note){
   const card=$("#gCard"); if(!card) return;
-  fetch("/api/google/status").then(r=>r.json()).then(g=>{
+  KGAuth.fetch("/api/google/status").then(r=>r.json()).then(g=>{
     const body=document.createElement("div");
     body.className="g-body"; body.style.marginTop="12px";
     if(!g.available){
@@ -1067,6 +1067,7 @@ function renderGoogleCard(note){
 }
 
 function renderView(){
+  if(KGAuth.current()?.role==="rais"&&!["dashboard","projects","chat","questions","appeals","buyers"].includes(activeView))activeView="dashboard";
   ["dashboard","associations","members","companies","leads","questions","projects","chat","report","conference","appeals","dsr","analysts","buyers","settings"].forEach(v=>$("#view-"+v)&&$("#view-"+v).classList.toggle("active",v===activeView));
   if(activeView==="dashboard")renderDashboard();
   if(activeView==="associations")renderAssociations();
@@ -1100,8 +1101,8 @@ function renderView(){
 let BQ_TAB = "pending";
 
 const bqApi = (path, body) =>
-  fetch("/api/register/" + path, { method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify(Object.assign({ pass:"admin", kind:"buyer" }, body||{})) })
+  KGAuth.fetch("/api/register/" + path, { method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify(Object.assign({kind:"buyer" }, body||{})) })
     .then(r=>r.json()).catch(()=>({ error:"network" }));
 
 async function renderBuyers(){
@@ -1189,7 +1190,7 @@ document.addEventListener("click", async e=>{
 /* ---- nav build ---- */
 function buildNav(){
   const nav=$("#adminNav");nav.innerHTML="";
-  NAV.forEach(n=>{
+  NAV.filter(n=>KGAuth.current()?.role!=="rais"||["dashboard","projects","chat","questions","appeals","buyers"].includes(n.v)).forEach(n=>{
     const b=document.createElement("button");b.className=(n.v===activeView?"active":"");
     b.innerHTML=n.ic+`<span>${t(n.k)}</span>`;
     b.addEventListener("click",()=>{activeView=n.v;buildNav();renderView();});
@@ -1230,7 +1231,7 @@ $("#loginForm").addEventListener("submit",async e=>{e.preventDefault();
   }catch(_){ $("#lgErr").textContent=t("lg_err"); }
   finally{ btn.disabled=false; }
 });
-$("#logoutBtn").addEventListener("click",()=>{sessionStorage.removeItem("kg_admin");location.reload();});
+$("#logoutBtn").addEventListener("click",()=>{KGAuth.logout().then(()=>location.reload()).catch(e=>UI.alert(e.message));});
 
 /* ---- official letter modal ---- */
 $("#ltrClose").addEventListener("click",()=>$("#letterModal").hidden=true);
@@ -1243,4 +1244,4 @@ $("#ltrPrint").addEventListener("click",()=>{ const w=window.open("","_blank"); 
 seed();
 setTheme(localStorage.getItem("kg_theme")||"light");
 applyChrome();
-if(sessionStorage.getItem("kg_admin")==="1") openPanel();
+KGAuth.ready().then(()=>{if(KGAuth.user(["admin","rais"]))openPanel();}).catch(e=>{$("#lgErr").textContent=e.message;});

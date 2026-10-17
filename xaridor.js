@@ -14,9 +14,8 @@
      then free, and the buyer never watches four spinners to see
      what is really one state.
 
-   • Credentials, never ids. Every call sends the login pair and
-     the server resolves who that is. Nothing here passes a buyer
-     id, because a client-supplied id is a claim.
+   • Identity comes from the server session; no credentials or claimed buyer ids
+     are transported by cabinet requests.
 
    • B2B is not a filter the user can clear. It is pinned server
      side (buyer.js CHANNEL) and simply stated in the topbar —
@@ -39,16 +38,15 @@ const VIEWS = [
   { v: "legal",   k: "xr_v_legal",   ic: "⚙️" },
 ];
 
-let creds = null;      // { login, password }
+let creds = null;      // server session metadata
 let HOME  = null;      // the whole cabinet state, from /api/buyer/home
 let view  = "catalog";
 let catalogRows = null;   // last search result, kept so a re-render is free
 
 /* ---------- transport ---------- */
-const post = (path, body) => api(path, Object.assign({}, creds, body || {}));
+const post = (path, body) => api(path, body || {});
 
-const stored = () => { try { return JSON.parse(sessionStorage.getItem("kg_by") || "null"); }
-                       catch(e){ return null; } };
+const stored = () => KGAuth.user(["buyer"]);
 
 /* ============================================================
    SIGN IN
@@ -80,7 +78,7 @@ async function start(){
   if(!r || !r.ok){
     /* A stale session key survives a server restart; it should send the buyer
        back to the form, not into an empty cabinet. */
-    sessionStorage.removeItem("kg_by");
+
     creds = null;
     $("#xrErr").textContent = t("xr_e_load");
     return;
@@ -138,7 +136,7 @@ function render(){
   if(view === "profile") renderProfile();
   if(view === "legal") LegalPanel.mount($("#view-legal"), {
     creds: () => creds, panelClass: "panel co-panel", profileHref: "xaridor.html",
-    onWithdrawn: () => { sessionStorage.removeItem("kg_by"); location.href = "index.html"; } });
+    onWithdrawn: () => { KGAuth.logout().then(()=>{location.href="index.html";}); } });
 }
 
 /* ============================================================
@@ -574,10 +572,7 @@ document.addEventListener("submit", e => {
 });
 
 $("#xrForm").addEventListener("submit", signIn);
-$("#xrLogout").addEventListener("click", () => {
-  sessionStorage.removeItem("kg_by");
-  location.href = "index.html";
-});
+$("#xrLogout").addEventListener("click",()=>{KGAuth.logout().then(()=>{location.href="index.html";}).catch(e=>UI.alert(e.message));});
 
 /* A language switch has to repaint the whole cabinet: almost every string on
    screen was built by a render function, not by data-i18n. The catalogue is
@@ -600,7 +595,5 @@ chrome(() => {
   render();
 });
 
-creds = stored();
-if(creds && creds.login) start();
-else $("#xrLogin").focus();
+KGAuth.ready().then(()=>{creds=stored();if(creds)start();else $("#xrLogin").focus();}).catch(e=>{$("#xrErr").textContent=e.message;});
 })();

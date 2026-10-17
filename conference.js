@@ -6,7 +6,7 @@ if(!LANGS.includes(LANG)) LANG = "uz";
 const L = () => LANGS.indexOf(LANG);
 const $ = (s,r=document)=>r.querySelector(s);
 
-let email = localStorage.getItem("kg_email") || "";
+let email="";
 let conf = null;          // current conference object
 let tick = null;          // countdown interval
 
@@ -41,7 +41,7 @@ const MN = {
 };
 function fmtDateTime(dtStr){
   const d = new Date(dtStr);
-  if(isNaN(d)) return dtStr || "—";
+  if(isNaN(d)) return "—";
   const day=d.getDate(), mon=MN[LANG][d.getMonth()], yr=d.getFullYear();
   const hh=String(d.getHours()).padStart(2,"0"), mm=String(d.getMinutes()).padStart(2,"0");
   return `${day} ${mon} ${yr}, ${hh}:${mm}`;
@@ -84,7 +84,7 @@ function renderConf(){
       // then the card goes live but the button stays out of reach
       if(conf.link){
         // one hop through the server: it resolves the current Google Meet room
-        joinBtn.href = conf.id ? "/api/conference/join?id="+encodeURIComponent(conf.id) : conf.link;
+        joinBtn.href = conf.id ? "/api/conference/join?id="+encodeURIComponent(conf.id) : KGAuth.safeUrl(conf.link);
         joinBtn.classList.remove("disabled");
         hint.hidden = true;
       } else {
@@ -118,7 +118,7 @@ function escapeHtml(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"
 
 async function loadConference(){
   try{
-    const r = await fetch("/api/conference");
+    const r = await KGAuth.fetch("/api/conference");
     const c = r.ok ? await r.json() : {};
     conf = (c && c.title) ? c : null;
   }catch(e){ conf = null; }
@@ -134,12 +134,12 @@ function startApp(){
   $("#uEmail").textContent = email;
   loadConference();
 }
-$("#emailForm").addEventListener("submit",e=>{e.preventDefault();
+$("#emailForm").addEventListener("submit",async e=>{e.preventDefault();
   const v=$("#emailInput").value.trim().toLowerCase();
   if(!validEmail(v)){ $("#emailErr").textContent=ct("email_err"); return; }
-  email=v; localStorage.setItem("kg_email",v); $("#emailErr").textContent=""; startApp();
+  try{await KGAuth.guest(v,"");email=v;$("#emailErr").textContent="";startApp();}catch(e){$("#emailErr").textContent=e.message;}
 });
-$("#switchEmail").addEventListener("click",()=>{ localStorage.removeItem("kg_email"); email=""; showLogin(); });
+$("#switchEmail").addEventListener("click",()=>{ email=""; showLogin(); });
 
 /* ============================================================
    LANG + THEME + STATIC
@@ -175,4 +175,4 @@ setTheme(localStorage.getItem("kg_theme")||"light");
 document.documentElement.lang=LANG;
 $("#langBtn").textContent=LANG.toUpperCase();
 applyStatic();
-if(email && validEmail(email)) startApp(); else showLogin();
+KGAuth.ready().then(s=>{email=s.user?.email||s.guest?.email||s.user?.name||"";if(s.authenticated||validEmail(email))startApp();else showLogin();if(s.authenticated)$("#switchEmail").hidden=true;}).catch(e=>{showLogin();$("#emailErr").textContent=e.message;});

@@ -2,7 +2,8 @@
    BOZOR — client
    Catalog · RFQ exchange · Seller Center · Market Intelligence
    ============================================================ */
-(() => {
+(async () => {
+await KGAuth.ready();
 const { $, $$, t, esc, escA, num, money, day, api, qs, ident, chip, chips,
         match, meters, ranks, kpi, funnel, rail, draft, empty, loading, say,
         tabs, segment, drawer, closeDrawer, applyStatic, chrome } = MK;
@@ -221,7 +222,7 @@ function renderId(){
          <input id="bzPass" type="password" placeholder="${escA(t("bz_pass"))}" autocomplete="current-password" />
          <button class="btn btn-primary" type="button" id="bzIn">${esc(t("bz_enter"))}</button>
        </span>`;
-  if(c) $("#bzOut").addEventListener("click", () => { ident.setCompany(null); renderId(); renderSeller(); });
+  if(c) $("#bzOut").addEventListener("click", async () => { await KGAuth.logout(); renderId(); renderSeller(); });
   else {
     const go = async () => {
       const r = await MK.companyLogin($("#bzLogin").value.trim(), $("#bzPass").value);

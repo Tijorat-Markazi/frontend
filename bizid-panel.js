@@ -75,7 +75,7 @@
   }
 
   function post(body){
-    return fetch("/api/business-id/contact", {
+    return KGAuth.fetch("/api/business-id/contact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -173,7 +173,7 @@
     style();
     host.innerHTML = '<p class="co-sub">…</p>';
 
-    var loaded = await post({ login: creds.login, password: creds.password, op: "get" });
+    var loaded = await post({  op: "get" });
     if(!loaded || !loaded.ok){
       host.innerHTML = '<p class="co-sub">' + esc(t("fail")) + '</p>';
       return;
@@ -193,7 +193,7 @@
     }
 
     saveBtn.addEventListener("click", async function (){
-      var body = { login: creds.login, password: creds.password };
+      var body = {  };
       fieldsOf(state).forEach(function (f){
         var el = host.querySelector('[data-bidp="' + f.key + '"]');
         body[f.key] = el ? el.value.trim() : "";

@@ -147,7 +147,7 @@ function kgMonumentBackground(mount, sources) {
      failed lookup falls back to the guessed list. */
   var listing = sources
     ? Promise.resolve(sources)
-    : fetch("/api/monuments")
+    : KGAuth.fetch("/api/monuments")
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) { return j && Array.isArray(j.files) ? j.files : KG_MONUMENTS; })
         .catch(function () { return KG_MONUMENTS; });

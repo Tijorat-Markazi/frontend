@@ -43,7 +43,8 @@ function products(list){
   }).join("")}</div>`;
 }
 
-function render(d){
+// Text and attribute values are escaped; only generated markup is returned.
+function renderPublicCompany(d){
   const c = d.company, a = d.assoc;
   const assocName = a ? ((a.i18n && a.i18n[MK.lang()]) || a.name) : "";
 
@@ -104,7 +105,7 @@ async function load(){
     crumbAssoc.textContent = assocName || "—";
     crumbAssoc.href = d.assoc ? "association.html?id=" + encodeURIComponent(d.assoc.id) : "associations.html";
   }
-  root.innerHTML = render(d);
+  root.innerHTML = renderPublicCompany(d);
 }
 
 chrome();

@@ -58,7 +58,7 @@ async function api(path, body){
     const opt = body
       ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
       : undefined;
-    const r = await fetch(path, opt);
+    const r = await KGAuth.fetch(path, opt);
     const j = await r.json().catch(() => ({ error: "bad_response" }));
     return j;
   }catch(e){ return { error: "network" }; }
@@ -67,36 +67,23 @@ const qs = o => Object.entries(o || {})
   .filter(([, v]) => v !== "" && v != null && v !== false)
   .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v)).join("&");
 
-/* ---------- identity ----------
-   Company credentials are kept for the session only (sessionStorage), so a
-   shared machine does not leave a seller cabinet unlocked. The e-mail
-   identity is not a credential and persists like the language choice. */
+/* ---------- cookie-backed identity; email is contact data only ---------- */
+let contact=null;
 const ident = {
-  company(){ try { return JSON.parse(sessionStorage.getItem("mk_co") || "null"); } catch(e){ return null; } },
-  setCompany(c){ c ? sessionStorage.setItem("mk_co", JSON.stringify(c)) : sessionStorage.removeItem("mk_co"); },
-  email(){ return localStorage.getItem("mk_email") || ""; },
-  name(){ return localStorage.getItem("mk_name") || ""; },
-  setPerson(email, name){
-    if(email) localStorage.setItem("mk_email", email); else localStorage.removeItem("mk_email");
-    if(name) localStorage.setItem("mk_name", name);
-  },
-  /** Credentials to attach to a request that needs a company. */
-  co(extra){
-    const c = ident.company();
-    return Object.assign({}, extra || {}, c ? { login: c.login, password: c.password } : {});
-  },
-  /** Identity to attach to a request that accepts a person. */
-  me(extra){
-    return Object.assign({}, extra || {}, { email: ident.email(), name: ident.name() });
-  },
+  company(){return KGAuth.user(["company"]);},
+  setCompany(){ /* Session changes are handled only by login/logout. */ },
+  email(){const s=KGAuth.current();return contact?.email||s?.user?.email||s?.guest?.email||"";},
+  name(){const s=KGAuth.current();return contact?.name||s?.user?.name||s?.guest?.name||"";},
+  async setPerson(email,name){try{await KGAuth.ready();if(KGAuth.current().role==="guest")await KGAuth.guest(email,name);contact={email,name};return true;}catch(e){UI.alert(e.message);return false;}},
+  co(extra){return Object.assign({},extra||{});},
+  me(extra){return Object.assign({},extra||{},{email:ident.email(),name:ident.name()});},
 };
-
-/** Sign in with the same company credentials company.html issues. */
-async function companyLogin(login, password){
-  const r = await api("/api/company/login", { login, password });
-  if(!r || !r.ok) return { error: (r && r.error) || "invalid" };
-  ident.setCompany({ login, password, id: r.company.id, name: r.company.name, sector: r.company.sector });
-  return { ok: true, company: r.company };
+async function companyLogin(login,password){
+  try{
+    const s=await KGAuth.login(login,password);
+    if(s.role!=="company"){location.href=KGAuth.safeTarget(s.target)||"index.html";return {error:"company_login_required"};}
+    return await KGAuth.json("/api/company/login",{});
+  }catch(e){return {error:e.message};}
 }
 
 /* ---------- render primitives ---------- */

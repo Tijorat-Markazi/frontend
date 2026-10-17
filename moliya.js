@@ -2,7 +2,8 @@
    MOLIYA BOZORI — client
    Marketplace · Reverse auction · Capital market · Cabinet · Intelligence
    ============================================================ */
-(() => {
+(async () => {
+await KGAuth.ready();
 const { $, $$, t, esc, escA, num, money, pctTxt, day, api, qs, ident, chip, chips,
         match, meters, ranks, kpi, funnel, rail, draft, empty, loading, say,
         tabs, segment, drawer, closeDrawer, applyStatic, chrome } = MK;
@@ -408,11 +409,11 @@ function renderId(){
              <input id="mlPass" type="password" placeholder="${escA(t("ml_pass"))}" autocomplete="current-password" />
              <button class="btn btn-primary" type="button" id="mlIn">${esc(t("ml_enter"))}</button>`}
     </span>`;
-  $("#mlSaveEmail").addEventListener("click", () => {
-    ident.setPerson($("#mlEmail").value.trim(), ident.name());
+  $("#mlSaveEmail").addEventListener("click", async () => {
+    if(!await ident.setPerson($("#mlEmail").value.trim(), ident.name()))return;
     renderCabinet();
   });
-  if(c) $("#mlOut").addEventListener("click", () => { ident.setCompany(null); renderId(); renderCabinet(); });
+  if(c) $("#mlOut").addEventListener("click", async () => { await KGAuth.logout(); renderId(); renderCabinet(); });
   else {
     const go = async () => {
       const r = await MK.companyLogin($("#mlLogin").value.trim(), $("#mlPass").value);
@@ -487,7 +488,7 @@ function wireCabinet(){
     e.preventDefault();
     const msg = $("#mlPassMsg");
     if(!ident.email()) return say(msg, t("ml_need_email"), "err");
-    ident.setPerson(ident.email(), $("#fpName").value.trim());
+    if(!await ident.setPerson(ident.email(), $("#fpName").value.trim()))return;
     const r = await api("/api/moliya/passport", ident.me({
       sector: $("#fpSector").value, region: $("#fpRegion").value, legalForm: $("#fpLegal").value,
       founded: $("#fpFounded").value, employees: $("#fpEmployees").value, revenue: $("#fpRevenue").value,

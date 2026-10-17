@@ -1,106 +1,25 @@
-/* ============================================================
-   TIJORAT MARKAZI — AI Assistant page
-   Uses backend (server.js) when available; falls back to
-   localStorage + demo replies when it isn't.
-   ============================================================ */
-let LANG = localStorage.getItem("kg_lang") || "uz";
-if(!LANGS.includes(LANG)) LANG = "uz";
-const L = () => LANGS.indexOf(LANG);
-const $ = (s,r=document)=>r.querySelector(s);
+/* Assistant identity and private archives belong to the server session. */
+let LANG=localStorage.getItem("kg_lang")||"uz";
+if(!LANGS.includes(LANG))LANG="uz";
+const L=()=>LANGS.indexOf(LANG);
+const $=(s,r=document)=>r.querySelector(s);
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
-
-let HAS_BACKEND=false, AI_ON=false, GUEST=false;
-// when opened from a company panel (?co=Name) questions are tagged with that company
-const COMPANY_TAG = (new URLSearchParams(location.search).get("co")||"").slice(0,160);
-let email = localStorage.getItem("kg_email") || "";
-// stable per-browser id so the Demo (guest) free-question limit survives reloads
-let GUEST_ID = localStorage.getItem("kg_guest_id");
-if(!GUEST_ID){ GUEST_ID = "guest_"+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem("kg_guest_id",GUEST_ID); }
-let sessions = [];          // [{id,title,updated}]
-let current = null;         // {id,title,messages:[{role,text}]}
-
-const chatBody=$("#chatBody"), chatStatus=$("#chatStatus"), exList=$("#exList"), sessionList=$("#sessionList");
-const SUGGESTS=["sug1","sug2","sug3","sug4","sug5","sug6"];
-
-// Privileged roles (admin / super-admin / company / rais / analyst) get unlimited AI.
-// Credentials come from the panel that opened the assistant (same-tab sessionStorage)
-// and are VALIDATED server-side — a faked flag won't bypass the limit.
-function panelAuth(){
-  try{
-    if(sessionStorage.getItem("kg_admin")==="1") return { role:"admin", pass:"admin" };
-    const co=JSON.parse(sessionStorage.getItem("kg_co")||"null"); if(co&&co.login) return { role:"company", login:co.login, password:co.password };
-    const as=JSON.parse(sessionStorage.getItem("kg_as")||"null"); if(as&&as.login) return { role:"assoc",   login:as.login, password:as.password };
-    const an=JSON.parse(sessionStorage.getItem("kg_an")||"null"); if(an&&an.login) return { role:"analyst", login:an.login, password:an.password };
-  }catch(e){}
-  return null;
-}
-let LIMIT_META=null, LIMIT_REACHED=false;
-let ACTIVE=null;                    // in-flight answer, so it can be stopped
-let PANEL=false, PANEL_LABEL="", PANEL_HOME="index.html";
-// When the assistant is opened from a logged-in panel, sign in automatically using
-// that account's identity (no email gate) so the user lands straight in their AI chat.
+let HAS_BACKEND=false,AI_ON=false,GUEST=false,email="";
+let sessions=[],current=null;
+const chatBody=$("#chatBody"),chatStatus=$("#chatStatus"),exList=$("#exList"),sessionList=$("#sessionList");
+const SUGGESTS=["sug1","sug2","sug3","sug4","sug5"];
+let LIMIT_META=null,LIMIT_REACHED=false,ACTIVE=null;
+let PANEL=false,PANEL_LABEL="",PANEL_HOME="index.html";
 function autoIdentity(){
-  const a=panelAuth();
-  if(a){
-    if(a.role==="admin") return { email:"admin@konglomerat", label:"Admin", home:"admin.html" };
-    const home = a.role==="assoc" ? "association.html" : "company.html";
-    const label = COMPANY_TAG || a.login || "";
-    return { email:(a.role||"u")+"-"+(a.login||"panel")+"@konglomerat", label, home };
-  }
-  // fallback: opened from a panel link (?panel=...) even if the session didn't carry —
-  // still skip the email gate so company/uyushma users never bounce to the main page
-  const panel=(new URLSearchParams(location.search).get("panel")||"");
-  const slug=(COMPANY_TAG||"x").toLowerCase().replace(/[^a-z0-9]+/g,"")||"panel";
-  if(panel==="admin")   return { email:"admin@konglomerat", label:"Admin", home:"admin.html" };
-  if(panel==="assoc")   return { email:"assoc-"+slug+"@konglomerat",   label:COMPANY_TAG||"Uyushma",  home:"association.html" };
-  if(panel==="company") return { email:"company-"+slug+"@konglomerat", label:COMPANY_TAG||"Kompaniya", home:"company.html" };
-  return null;
+ const s=KGAuth.current();if(!s?.authenticated||s.restricted)return null;
+ return {email:s.user.email||s.user.login||s.user.name,label:s.user.name||s.user.login,home:KGAuth.safeTarget(s.target)||"index.html"};
 }
-
-/* ============================================================
-   STORAGE — backend first, localStorage fallback
-   ============================================================ */
-const LSKEY = ()=>"kg_chats_"+email;
-const LSPROB = ()=>"kg_problems_"+email;
-function lsAll(){try{return JSON.parse(localStorage.getItem(LSKEY())||'{"sessions":{}}');}catch(e){return {sessions:{}};}}
-function lsSave(o){localStorage.setItem(LSKEY(),JSON.stringify(o));}
-
-const API = {
-  async sessions(){
-    if(HAS_BACKEND){try{const r=await fetch("/api/sessions?email="+encodeURIComponent(email));if(r.ok)return await r.json();}catch(e){}}
-    const all=lsAll();return Object.values(all.sessions).filter(s=>s.messages.length)
-      .map(s=>({id:s.id,title:s.title||"…",updated:s.updated})).sort((a,b)=>b.updated-a.updated);
-  },
-  async session(id){
-    if(HAS_BACKEND){try{const r=await fetch("/api/session?email="+encodeURIComponent(email)+"&id="+encodeURIComponent(id));if(r.ok)return await r.json();}catch(e){}}
-    const all=lsAll();const s=all.sessions[id];return {messages:s?s.messages:[]};
-  },
-  async ask(history,message,attachment,signal){
-    if(HAS_BACKEND){try{const r=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},signal,
-      body:JSON.stringify({message,history,lang:LANG,attachment,guestId:GUEST_ID})});if(r.ok){return await r.json();}}catch(e){ if(e.name==="AbortError") throw e; }}
-    return { reply: demoReply(message) };
-  },
-  async chat(id,message,attachment,signal){
-    if(HAS_BACKEND){
-      try{const r=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},signal,
-        body:JSON.stringify({email,id,message,lang:LANG,attachment,company:COMPANY_TAG,auth:panelAuth()})});
-        if(r.ok){return await r.json();}}catch(e){ if(e.name==="AbortError") throw e; }
-    }
-    // fallback: demo reply + persist to localStorage
-    const note = attachment ? " 📎 "+(attachment.name||"file") : "";
-    const reply = demoReply(message);
-    const all=lsAll();
-    const s=all.sessions[id]||(all.sessions[id]={id,title:"",created:Date.now(),updated:Date.now(),messages:[]});
-    s.messages.push({role:"user",text:(message+note).trim(),time:Date.now()});
-    if(!s.title)s.title=(message||attachment?.name||"…").slice(0,46);
-    s.messages.push({role:"assistant",text:reply,time:Date.now()});
-    s.updated=Date.now();lsSave(all);
-    const probs=JSON.parse(localStorage.getItem(LSPROB())||"[]");probs.push({time:Date.now(),question:(message+note).trim()});
-    localStorage.setItem(LSPROB(),JSON.stringify(probs));
-    return { reply };
-  },
+const API={
+ sessions:()=>KGAuth.json("/api/sessions"),
+ session:id=>KGAuth.json("/api/session?id="+encodeURIComponent(id)),
+ ask:(history,message,attachment,signal)=>KGAuth.json("/api/ask",{message,history,lang:LANG,attachment},{signal}),
+ chat:(id,message,attachment,signal)=>KGAuth.json("/api/chat",{id,message,lang:LANG,attachment},{signal}),
 };
-function demoReply(message){const q=message.toLowerCase();const f=RESPONSES.find(r=>r.k.some(k=>q.includes(k)));return f?f.a[L()]:DEFAULT_REPLY[L()];}
 
 /* ============================================================
    CHAT UI
@@ -117,7 +36,8 @@ function humanSize(n){
   return (n/1024/1024).toFixed(1) + " MB";
 }
 function fileBtn(url,label,size){
-  const name = label || url.split("/").pop();
+  url=KGAuth.safeUrl(url);if(!url.startsWith("/uploads/"))return "";
+  const name=KGAuth.escape(label||url.split("/").pop());url=KGAuth.escape(url);
   const ext  = url.split(".").pop().toLowerCase();
   return '<a class="msg-file" href="'+url+'" download="'+name+'">'
        +   '<span class="msg-file-ic">'+(FILE_ICON[ext]||"📄")+'</span>'
@@ -191,17 +111,18 @@ async function send(text){
   chatStatus.textContent=T.chat_typing[L()];
   ACTIVE = new AbortController();
   setBusy(true);
-  let out=null, stopped=false;
+  let out=null, stopped=false, failure=null;
   try{
     out = GUEST ? await API.ask(history,text,att,ACTIVE.signal)
                 : await API.chat(current.id,text,att,ACTIVE.signal);
-  }catch(e){ stopped = !!(e && e.name==="AbortError"); }
+  }catch(e){ stopped = !!(e && e.name==="AbortError"); failure=e; }
   finally{ setBusy(false); ACTIVE=null; }
   if(stopped){                    // stopped by the user — keep their message, drop the answer
     typing.remove(); chatStatus.textContent=T.chat_online[L()];
     return;
   }
-  const reply = (out && out.reply) || demoReply(text||"");
+  if(!out || typeof out.reply!=="string"){typing.remove();chatStatus.textContent=failure?.message||"Service unavailable. Please try again.";return;}
+  const reply=out.reply;
   typing.remove();chatStatus.textContent=T.chat_online[L()];
   const split=splitFiles(reply);
   const files=mergeFiles(out && out.files, split.files);
@@ -251,8 +172,8 @@ async function refreshLimit(){
   if(!HAS_BACKEND){ updateLimitUI(null); return; }
   try{
     // guests are tracked by their per-browser id; logged-in users by email
-    const r=await fetch("/api/ai-usage",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({email: GUEST ? GUEST_ID : email, auth: GUEST ? null : panelAuth()})});
+    const r=await KGAuth.fetch("/api/ai-usage",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({})});
     if(r.ok){ LIMIT_META=await r.json(); updateLimitUI(LIMIT_META); }
   }catch(e){}
 }
@@ -268,6 +189,7 @@ function showChip(name,isImg){
 }
 function onFile(file){
   if(!file) return;
+  if(file.size>8*1024*1024){UI.alert("File too large (8 MiB max)");return;}
   const isImg=file.type.startsWith("image/");
   const isText=file.type.startsWith("text/")||/\.(txt|md|csv|json|log)$/i.test(file.name);
   const isDoc=/\.(pdf|docx|xlsx|pptx|doc|xls|ppt)$/i.test(file.name);
@@ -308,7 +230,7 @@ async function startRec(){
     chatStatus.style.color="";chatStatus.textContent=T.mic_transcribing[L()];
     let text="";
     if(HAS_BACKEND){try{const b64=await blobToB64(blob);
-      const r=await fetch("/api/transcribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio:b64,mime:blob.type})});
+      const r=await KGAuth.fetch("/api/transcribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio:b64,mime:blob.type})});
       if(r.ok) text=(await r.json()).text||"";}catch(e){}}
     chatStatus.textContent=T.chat_online[L()];
     if(text){const inp=$("#chatText");inp.value=(inp.value?inp.value+" ":"")+text;inp.focus();}
@@ -327,12 +249,12 @@ function newChat(){
   renderChat();renderSessionList();$("#chatText").focus();
 }
 async function openSession(id){
-  const data=await API.session(id);
+  let data;try{data=await API.session(id);}catch(e){chatStatus.textContent=e.message;return;}
   const meta=sessions.find(s=>s.id===id)||{id,title:"…"};
   current={id,title:meta.title,messages:(data.messages||[]).map(m=>({role:m.role,text:m.text}))};
   renderChat();renderSessionList();
 }
-async function refreshSessions(){sessions=await API.sessions();renderSessionList();}
+async function refreshSessions(){try{sessions=await API.sessions();renderSessionList();}catch(e){chatStatus.textContent=e.message;}}
 function renderSessionList(){
   sessionList.innerHTML="";
   if(!sessions.length){sessionList.appendChild(el("p","session-empty",T.asst_hist_empty[L()]));return;}
@@ -343,7 +265,7 @@ function renderSessionList(){
     sessionList.appendChild(it);
   });
 }
-function escAttr(s){return String(s||"").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function escAttr(s){return KGAuth.escape(s);}
 
 /* ============================================================
    EXAMPLES
@@ -380,7 +302,7 @@ function showLogin(){
 }
 function updateAccountUI(){
   if(GUEST){
-    const demoEmail=localStorage.getItem("kg_demo_email")||"";
+    const demoEmail=KGAuth.current()?.guest?.email||"";
     $("#uEmail").textContent=demoEmail || T.asst_guest_label[L()];
     $("#switchEmail").textContent=T.asst_signin_email[L()];
     $("#switchEmail").hidden=false;
@@ -412,18 +334,20 @@ async function startApp(){
   await refreshSessions();
   if(sessions.length) openSession(sessions[0].id); else newChat();
 }
-function startGuest(demoEmail){
-  GUEST=true;localStorage.removeItem("kg_email");email="";sessions=[];current=null;
-  if(demoEmail){ GUEST_ID=demoEmail; localStorage.setItem("kg_guest_id",demoEmail); localStorage.setItem("kg_demo_email",demoEmail); }
-  $("#asstLogin").hidden=true;$("#asstApp").hidden=false;
-  updateAccountUI();newChat();refreshLimit();   // show remaining free-question count
+async function startGuest(demoEmail){
+  try{
+    await KGAuth.guest(demoEmail,"");
+    GUEST=true;email="";sessions=[];current=null;
+    $("#asstLogin").hidden=true;$("#asstApp").hidden=false;
+    updateAccountUI();newChat();await refreshLimit();
+  }catch(e){$("#demoErr").textContent=e.message;}
 }
 // Unified login: kgResolveLogin (auth.js) tries the credentials against every
 // account tier and, on a match, returns the page to open with the right session
 // key already stored. Each panel auto-signs-in from that key on load.
 $("#emailForm").addEventListener("submit",async e=>{e.preventDefault();
   const login=$("#loginInput").value.trim();
-  const pass=$("#passInput").value;
+  const pass=$("#passInput").value;$("#passInput").value="";
   if(!login && !pass){$("#emailErr").textContent=T.asst_login_err[L()];return;}
   const btn=e.target.querySelector('button[type="submit"]');
   if(btn) btn.disabled=true;
@@ -442,7 +366,7 @@ function demoGo(){
 $("#loginClose").addEventListener("click",()=>{ location.href="index.html"; });
 $("#demoBtn").addEventListener("click",demoGo);
 $("#demoEmailInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); demoGo(); } });
-$("#switchEmail").addEventListener("click",()=>{localStorage.removeItem("kg_email");email="";current=null;sessions=[];showLogin();});
+$("#switchEmail").addEventListener("click",()=>{KGAuth.logout().then(()=>{email="";current=null;sessions=[];showLogin();}).catch(e=>{chatStatus.textContent=e.message;});});
 $("#newChatBtn").addEventListener("click",newChat);
 $("#chatClear").addEventListener("click",newChat);
 $("#chatForm").addEventListener("submit",e=>{e.preventDefault();const inp=$("#chatText");const v=inp.value.trim();if(!v)return;inp.value="";send(v);});
@@ -480,10 +404,10 @@ nav.querySelectorAll("a").forEach(a=>a.addEventListener("click",()=>nav.classLis
 async function init(){
   setTheme(localStorage.getItem("kg_theme")||"light");
   document.documentElement.lang=LANG;$("#langBtn").textContent=LANG.toUpperCase();
-  try{const r=await fetch("/api/ping");if(r.ok){const j=await r.json();HAS_BACKEND=true;AI_ON=!!j.ai;}}catch(e){HAS_BACKEND=false;}
+  try{await KGAuth.ready();const j=await KGAuth.json("/api/ping");HAS_BACKEND=true;AI_ON=!!j.ai;}catch(e){HAS_BACKEND=false;$("#emailErr").textContent=e.message;showLogin();return;}
   applyStatic();renderExamples();
   const ident=autoIdentity();
-  if(ident){ PANEL=true; email=ident.email; PANEL_LABEL=ident.label; PANEL_HOME=ident.home; startApp(); }
+  if(ident){ PANEL=true; email=ident.email; PANEL_LABEL=ident.label; PANEL_HOME=ident.home; await startApp(); }
   else showLogin();   // always gate on login/password (or Demo) — no silent email resume
 }
 init();
