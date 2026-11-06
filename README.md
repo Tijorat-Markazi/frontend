@@ -68,3 +68,19 @@ restoring cabinet privileges. The frontend requires no production secrets or
 environment variables; those belong in the infra repository's `prod` environment.
 
 Backend: https://github.com/Tijorat-Markazi/backend
+
+## Dedicated Docker server
+
+The existing shared Caddy terminates TLS for `tijoratmarkazi.uz` and forwards to
+Compose service `tijoratmarkazi-frontend:8080`. Nginx serves the static site and
+proxies `/api`, `/ws` and `/uploads` (including subpaths) to the private Docker
+alias `tijoratmarkazi-backend-upstream:4321`. Prefixes and cookies are preserved.
+Lazy DNS lets frontend health pass before backend startup. The frontend joins
+the edge and project backend networks, never the shared database network.
+
+Public listeners and certificates remain with the shared edge; the project's
+host port stays bound to 127.0.0.1. Frontend images from before this routing
+change are incompatible with the new layout. Published-image scans now also
+exercise HTTP routing, forwarded identity, WebSocket upgrades and token-safe
+logging using a disposable backend fixture. No production credentials are used.
+See the infra repository's SETUP.md for the approved frontend-first cutover.

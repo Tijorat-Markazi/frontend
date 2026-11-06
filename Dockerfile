@@ -15,6 +15,7 @@ USER root
 RUN apk upgrade --no-cache
 COPY deploy/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist /usr/share/nginx/html
+RUN nginx -t
 USER 101:101
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
