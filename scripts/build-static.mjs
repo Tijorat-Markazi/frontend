@@ -1,6 +1,7 @@
 import { cpSync, mkdirSync, readdirSync, lstatSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { root } from './check-static.mjs';
+import { stampDirectory } from './version-assets.mjs';
 
 const output = path.resolve(root, 'dist');
 if (path.dirname(output) !== root || path.basename(output) !== 'dist') throw new Error('Unsafe output directory');
@@ -22,4 +23,5 @@ function copyAssets(source, destination) {
 }
 function lstatSafe(target) { try { return lstatSync(target); } catch (error) { if (error.code === 'ENOENT') return null; throw error; } }
 copyAssets(path.join(root, 'assets'), path.join(output, 'assets'));
+stampDirectory(output);
 console.log('Staged only public static files in dist/.');
