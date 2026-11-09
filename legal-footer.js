@@ -75,22 +75,7 @@
       return `<li><a href="${PAGES[k]}">${esc(nm)}</a></li>`;
     }).join("");
 
-    /* The label is concatenated AFTER cell() has judged the value. Building
-       "STIR: [TO'LDIRILSIN...]" first and passing the whole string in meant
-       the placeholder no longer started the string, so it slipped past the
-       test and rendered as ordinary body text. */
-    const stir = val(o.stir)
-      ? `${esc(pick(LBL.stir))}: ${cell(val(o.stir))}`
-      : "";
-
     host.innerHTML = `
-      <div>
-        <h3>${esc(pick(LBL.about))}</h3>
-        <p><strong>${cell(val(o.legalName))}</strong></p>
-        ${val(o.legalForm) ? `<p>${cell(val(o.legalForm))}</p>` : ""}
-        ${stir ? `<p>${stir}</p>` : ""}
-        <p>${cell(val(o.address))}</p>
-      </div>
       <div>
         <h3>${esc(pick(LBL.docs))}</h3>
         <ul>${links}</ul>
@@ -99,7 +84,6 @@
         <h3>${esc(pick(LBL.contact))}</h3>
         <p>${cell(val(o.email))}</p>
         <p>${cell(val(o.phone))}</p>
-        ${val(o.dpoEmail) ? `<p><span style="opacity:.75">${esc(pick(LBL.dpo))}:</span> ${cell(val(o.dpoEmail))}</p>` : ""}
       </div>`;
   }
 
