@@ -74,7 +74,8 @@ test('no shipped page is left with an unversioned local stylesheet or script', (
 
 test('the hero emblem keeps a small size of its own if the stylesheet is late or stale', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  // the seal appears twice: beside the wordmark in the hero and in the structure band
   const emblems = html.match(/<svg class="hub-[^>]*>/g);
-  assert.equal(emblems.length, 2);
+  assert.equal(emblems.length, 4);
   for (const svg of emblems) assert.match(svg, /\bwidth="\d+" height="\d+"/);
 });
