@@ -39,7 +39,7 @@ function copyBundles(source, destination) {
     if (item.isSymbolicLink()) throw new Error('Bundle symlinks are not allowed');
     const from = path.join(source, item.name), to = path.join(destination, item.name);
     if (item.isDirectory()) copyBundles(from, to);
-    else if (/.(?:js|css|svg|png|jpe?g|webp|gif|avif|woff2?)$/i.test(item.name)) cpSync(from, to);
+    else if (/\.(?:js|css|svg|png|jpe?g|webp|gif|avif|woff2?)$/i.test(item.name)) cpSync(from, to);
   }
 }
 function lstatSafe(target) { try { return lstatSync(target); } catch (error) { if (error.code === 'ENOENT') return null; throw error; } }

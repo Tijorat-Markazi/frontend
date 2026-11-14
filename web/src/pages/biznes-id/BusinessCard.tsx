@@ -1,4 +1,5 @@
 import type { Lang } from "@legacy/data.js";
+import { mailHref } from "../../shell/cabinet/format";
 import { dialogs } from "../../shell/dialogs";
 import { useI18n } from "../../shell/i18n";
 import { formatDay, formatNumber, safeHttpUrl } from "../../shell/market/mk";
@@ -61,7 +62,7 @@ function ContactRows({ contact, t }: { contact: Contact; t: Translate }) {
   return (
     <>
       {phone && <ContactRow label={t("bid_phone")} value={phone} href={`tel:${phone.replace(/[^\d+]/g, "")}`} />}
-      {email && <ContactRow label={t("bid_email")} value={email} href={`mailto:${email}`} />}
+      {email && <ContactRow label={t("bid_email")} value={email} href={mailHref(email) ?? undefined} />}
       {location && <ContactRow label={t("bid_location")} value={location} />}
       {/* Keeps a javascript: address off the page even if one were ever stored. */}
       {website && <ContactRow label={t("bid_website")} value={website} href={safeHttpUrl(website)} />}

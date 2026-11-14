@@ -103,10 +103,10 @@ describe("MoliyaPage capital market", () => {
 });
 
 describe("MoliyaPage capital publishing", () => {
-  it("publishes a project under the visitor's contact details and reloads the list", async () => {
+  it("publishes a project under the name typed in the form, with the visitor's e-mail", async () => {
     setTestSession(VISITOR);
     const { container, calls } = await renderCapital({ "/api/moliya/project": { ok: true } });
-    /* Production sends the person's name over the form's own name field; the port keeps that. */
+    /* The old page let the visitor's name ("Ali") replace the project's name. */
     typeInto(container, "#cpName", "Paxta klasteri 2");
     typeInto(container, "#cpSector", "Agro");
     typeInto(container, "#cpCapex", "900");
@@ -116,7 +116,7 @@ describe("MoliyaPage capital publishing", () => {
     expect(await screen.findByText(uz("ml_save_ok"))).toBeTruthy();
     expect(bodiesSentTo(calls, "/api/moliya/project")).toEqual([
       {
-        name: "Ali",
+        name: "Paxta klasteri 2",
         sector: "Agro",
         region: "",
         summary: "",

@@ -50,8 +50,10 @@ export function ConferencePage() {
         if (!isCurrent) return;
         const known = session.user?.email || session.guest?.email || session.user?.name || "";
         setEmail(known);
-        setIsAccount(session.authenticated);
-        setPhase(session.authenticated || EMAIL_PATTERN.test(known) ? "joined" : "gate");
+        /* A rights-only session may reach nothing but the personal-data page. */
+        const isAccount = session.authenticated && !session.restricted;
+        setIsAccount(isAccount);
+        setPhase(isAccount || EMAIL_PATTERN.test(known) ? "joined" : "gate");
       })
       .catch((reason: unknown) => {
         if (!isCurrent) return;

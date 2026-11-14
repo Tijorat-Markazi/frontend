@@ -130,6 +130,9 @@ export function useAssistantChat(visitor: Visitor, backend: Backend): AssistantC
 
   useEffect(() => {
     isAlive.current = true;
+    /* Per run: the shared ref is set true again by a second mount before the
+       first run's requests come back, and would let both runs open a chat. */
+    let isCurrent = true;
     const refreshLimit = async () => {
       const usage = hasBackend ? await fetchUsage() : null;
       if (isAlive.current) setLimit(usage);
@@ -141,13 +144,15 @@ export function useAssistantChat(visitor: Visitor, backend: Backend): AssistantC
         return;
       }
       await refreshLimit();
+      if (!isCurrent) return;
       const list = await refreshSessions();
-      if (!isAlive.current) return;
+      if (!isCurrent) return;
       if (list.length > 0) await openSession(list[0].id);
       else newChat();
     };
     void start();
     return () => {
+      isCurrent = false;
       isAlive.current = false;
       controllerRef.current?.abort();
     };

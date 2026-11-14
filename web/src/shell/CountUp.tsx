@@ -10,6 +10,11 @@ export function CountUp({ target }: { target: number }) {
   useEffect(() => {
     const node = nodeRef.current;
     if (!node) return;
+    /* Someone who asked for less motion gets the figure at once. */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(target);
+      return;
+    }
     let frame = 0;
     const observer = new IntersectionObserver(
       entries => {

@@ -170,9 +170,11 @@ export function CapitalForm({ segment, t, onSaved }: CapitalFormProps) {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const form = event.currentTarget;
-    /* As moliya-forms.js sends it: the person's name replaces the form's own "name" field
-       (project, startup, investor). Production behaves so, and the port does not change what is stored. */
-    const body = companyIdentity.withCompany(companyIdentity.withPerson(bodyOf(form, segment)));
+    /* The form's own "name" is what is being published (project, startup, investor).
+       moliya-forms.js let the visitor's name overwrite it, so listings carried the wrong title. */
+    const fields = bodyOf(form, segment);
+    const person = companyIdentity.withPerson(fields);
+    const body = companyIdentity.withCompany("name" in fields ? { ...person, name: fields.name } : person);
     const answer = await marketJson(SAVE_PATHS[segment], body);
     if (!answer.ok) {
       setNotice({ key: answer.error === "identify_first" ? "ml_need_email" : "ml_save_fail", kind: "err" });

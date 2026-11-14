@@ -29,6 +29,8 @@ function requestFor(body: object | undefined): RequestInit | undefined {
   return { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
 }
 
+const REVOKE_DELAY_MS = 4000;
+
 export async function downloadDocument(path: string, fallbackName: string, body?: object): Promise<boolean> {
   try {
     const response = await auth.fetch(path, requestFor(body));
@@ -40,7 +42,8 @@ export async function downloadDocument(path: string, fallbackName: string, body?
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    /* Some browsers drop a download whose address dies in the same tick. */
+    setTimeout(() => URL.revokeObjectURL(url), REVOKE_DELAY_MS);
     return true;
   } catch {
     return false;

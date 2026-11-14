@@ -100,6 +100,17 @@ describe("ConferencePage gate", () => {
     expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false);
   });
 
+  it("keeps a rights-only session at the gate, since the server lets it reach nothing here", async () => {
+    setTestSession({ authenticated: true, restricted: true, role: "company", user: { name: "Alfa MChJ" } });
+    stubApi({ [API]: {} });
+
+    const { container } = renderPage(<ConferencePage />);
+    await flush();
+
+    await waitFor(() => expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false));
+    expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(true);
+  });
+
   it("lets a signed-in account straight in with no way to switch", async () => {
     setTestSession({ authenticated: true, role: "company", user: { name: "Alfa MChJ" } });
     stubApi({ [API]: {} });
