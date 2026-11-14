@@ -18,6 +18,7 @@ describe("AssistantPage sign-in", () => {
     expect(isHidden(container, "#asstLogin")).toBe(false);
     expect(isHidden(container, "#asstApp")).toBe(true);
     expect(screen.getByRole("heading", { name: "Tizimga kiriş" })).toBeTruthy();
+    expect(container.querySelector("footer.footer")).not.toBeNull();
   });
 
   it("signs in through the session and opens the cabinet the server names", async () => {
@@ -141,6 +142,8 @@ describe("AssistantPage for a signed-in account", () => {
     const { container, calls } = await renderAssistant({ [USAGE]: UNLIMITED, [SESSIONS]: list(sessions), [SESSION]: { messages } });
 
     expect(isHidden(container, "#asstLogin")).toBe(true);
+    /* A panel, like the cabinets: the site footer is for public pages. */
+    expect(container.querySelector("footer.footer")).toBeNull();
     expect(container.querySelector("#uEmail")?.textContent).toBe("Acme LLC");
     expect(isHidden(container, "#switchEmail")).toBe(true);
     expect(isHidden(container, "#limitNote")).toBe(true);

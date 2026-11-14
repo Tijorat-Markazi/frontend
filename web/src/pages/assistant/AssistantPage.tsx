@@ -115,7 +115,9 @@ export function AssistantPage() {
     : { href: "index.html", labelKey: "d_home" };
 
   return (
-    <PublicPage action={action}>
+    /* The site footer belongs to public pages. Once the chat is open this is a
+       panel like the cabinets, which carry none; the sign-in card keeps it. */
+    <PublicPage action={action} footer={visitor ? null : undefined}>
       {isAccount && <style>{CABINET_HEADER}</style>}
       <LoginCard isOpen={probe !== null && visitor === null} error={probe?.error ?? ""} onGuest={startGuest} />
       <main className="asst-page" id="asstApp" hidden={!probe || visitor === null}>
