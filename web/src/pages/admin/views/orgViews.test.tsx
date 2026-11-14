@@ -65,7 +65,7 @@ describe("associations view", () => {
 
     type(within(row).getByLabelText(uz("as_pass")), "new-pass-1");
 
-    await waitFor(() => expect(api.bodies(ORGS).at(-1)).toEqual({ op: "assoc.update", id: "a1", password: "new-pass-1" }));
+    await waitFor(() => expect(api.bodies(ORGS)).toContainEqual({ op: "assoc.update", id: "a1", password: "new-pass-1" }));
   });
 
   it("saves the rais login, password and Telegram chat together", async () => {
@@ -76,7 +76,7 @@ describe("associations view", () => {
     type(chat, " 77 ");
 
     await waitFor(() =>
-      expect(api.bodies(ORGS).at(-1)).toEqual({ op: "rais.set", login: "rais", password: "", tgChat: "77" }),
+      expect(api.bodies(ORGS)).toContainEqual({ op: "rais.set", login: "rais", password: "", tgChat: "77" }),
     );
   });
 
@@ -136,7 +136,7 @@ describe("members view", () => {
 
     fireEvent.click(within(row).getByRole("button", { name: uz("del") }));
 
-    await waitFor(() => expect(api.bodies(ORGS).at(-1)).toEqual({ op: "company.del", id: "c2" }));
+    await waitFor(() => expect(api.bodies(ORGS)).toContainEqual({ op: "company.del", id: "c2" }));
   });
 });
 

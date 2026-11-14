@@ -139,6 +139,7 @@ describe("AdminPage session", () => {
     await panelOpens();
     expect(heading()).toBe(uz("nav_dash"));
     expect(sidebar()).toEqual(NAV.map(item => uz(item.textKey)));
+    expect(screen.getByRole("link", { name: /AI Assistant/ }).getAttribute("href")).toBe("assistant.html");
 
     fireEvent.click(button(uz("logout")));
 
