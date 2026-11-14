@@ -54,6 +54,14 @@ for(const target of ['/api','/api/probe?x=1','/ws','/uploads/private.txt']){
 }
 for(const target of ['/.env','/missing-page','/apiary']) assert.equal((await fetch(base+target)).status,404);
 assert.equal((await fetch(base+'/')).status,200);
+// Clean addresses: the page answers without .html and the old address moves there.
+const moved=async(from,to)=>{const r=await fetch(base+from,{redirect:'manual'});assert.equal(r.status,301,from);assert.equal(new URL(r.headers.get('location'),base).pathname+new URL(r.headers.get('location'),base).search,to,from);};
+for(const page of ['/admin','/kirish','/moliya']){const r=await fetch(base+page,{redirect:'manual'});assert.equal(r.status,200,page);assert.match(await r.text(),/<div id="root">/,page);}
+await moved('/admin.html','/admin');
+await moved('/index.html','/');
+await moved('/index','/');
+await moved('/association.html?id=a%2F1','/association?id=a%2F1');
+assert.equal((await fetch(base+'/missing-page.html',{redirect:'follow'})).status,404);
 await new Promise((resolve,reject)=>{
   const ws=new WebSocket(base.replace('http:','ws:')+'/ws/test');
   const timer=setTimeout(()=>{ws.close();reject(Error('WebSocket upgrade timeout'));},5000);

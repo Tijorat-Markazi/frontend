@@ -23,7 +23,7 @@ test('WebSocket authenticates by cookie and static serving does not mask a missi
   assert.match(chat, /JSON\.stringify\(\{op:"auth"\}\)/);
   assert.doesNotMatch(chat, /sock\.send\([^\n]*(?:password|creds|pass:)/);
   const nginx = readFileSync(new URL('../deploy/nginx.conf', import.meta.url), 'utf8');
-  assert.match(nginx, /try_files \$uri \$uri\/ =404/);
+  assert.match(nginx, /try_files \$uri \$uri\.html \$uri\/ =404/);
   assert.doesNotMatch(nginx, /immutable|try_files[^;]*\/index\.html/);
 });
 
