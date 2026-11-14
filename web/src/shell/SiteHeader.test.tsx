@@ -2,10 +2,12 @@ import { act, fireEvent, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { T } from "@legacy/data.js";
 import { renderPage } from "../test/renderPage";
+import { auth, setTestSession } from "../test/fakeSession";
 import { SiteHeader } from "./SiteHeader";
 
 const SIGN_IN = { href: "assistant.html", labelKey: "btn_signin" };
 const label = (key: string): string => T[key]![0];
+const COMPANY = { authenticated: true, role: "company", target: "company.html", user: { name: "Alfa" } };
 
 describe("SiteHeader", () => {
   it("marks only the current page active", () => {
@@ -88,7 +90,7 @@ describe("SiteHeader", () => {
   });
 
   it("replaces sign-in with logout for a signed-in session but keeps other actions", () => {
-    sessionStorage.setItem("kg_co", "1");
+    setTestSession(COMPANY);
 
     const first = renderPage(<SiteHeader action={SIGN_IN} />);
     expect(screen.queryByRole("link", { name: label("btn_signin") })).toBeNull();
@@ -147,7 +149,7 @@ describe("SiteHeader", () => {
     });
 
     it("measures the overflow and switches to the compact layout", () => {
-      sessionStorage.setItem("kg_co", "1");
+      setTestSession(COMPANY);
 
       const { container } = renderPage(<SiteHeader />);
 
@@ -174,7 +176,7 @@ describe("SiteHeader", () => {
     });
 
     it("moves the action buttons into the menu so sign-out stays reachable", () => {
-      sessionStorage.setItem("kg_co", "1");
+      setTestSession(COMPANY);
 
       const { container } = renderPage(<SiteHeader action={{ href: "index.html", labelKey: "d_home2" }} />);
 
@@ -195,8 +197,35 @@ describe("SiteHeader", () => {
     });
   });
 
-  it("does not treat the guest tracking id as a signed-in session", () => {
-    localStorage.setItem("kg_guest_id", "guest-1");
+  it("signs out through the server and goes to the login page", async () => {
+    setTestSession(COMPANY);
+    const assign = vi.fn();
+    const realLocation = window.location;
+    vi.stubGlobal("location", { ...window.location, set href(value: string) { assign(value); } });
+    const { container } = renderPage(<SiteHeader />);
+
+    fireEvent.click(container.querySelector("#globalLogout")!);
+
+    expect(auth.logout).toHaveBeenCalledTimes(1);
+    expect(container.querySelector<HTMLButtonElement>("#globalLogout")?.disabled).toBe(true);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(assign).toHaveBeenCalledWith("kirish.html");
+    vi.stubGlobal("location", realLocation);
+  });
+
+  it("gives a restricted rights session no cabinet controls", () => {
+    setTestSession({ ...COMPANY, restricted: true });
+
+    const { container } = renderPage(<SiteHeader />);
+
+    expect(container.querySelector("#globalLogout")).toBeNull();
+  });
+
+  it("does not treat a guest session as signed in", () => {
+    setTestSession({ guest: { email: "a@b.uz" } });
 
     const { container } = renderPage(<SiteHeader />);
 

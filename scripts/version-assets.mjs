@@ -4,13 +4,16 @@ import path from 'node:path';
 
 const LOCAL_ASSET = /(<(?:script|link)\b[^>]*?\b(?:src|href)\s*=\s*)(["'])([^"'?#]+\.(?:css|js))\2/gi;
 const EXTERNAL = /^(?:[a-z][a-z\d+.-]*:|\/\/)/i;
+// React bundles carry a content hash in their name. A query here would make the
+// browser fetch a preloaded chunk twice: once as preloaded, once as imported.
+const HASHED_BUNDLE = /^\/?_r\//;
 
 // Cloudflare hands browsers these files with a four-hour cache whatever nginx
 // sends, while pages always revalidate. Without a version a release can pair
 // new HTML with last release's CSS and JS, so each file's URL follows its content.
 export function stampAssets(html, versionOf) {
   return html.replace(LOCAL_ASSET, (tag, before, quote, file) => {
-    if (EXTERNAL.test(file)) return tag;
+    if (EXTERNAL.test(file) || HASHED_BUNDLE.test(file)) return tag;
     const version = versionOf(file);
     return version ? `${before}${quote}${file}?v=${version}${quote}` : tag;
   });

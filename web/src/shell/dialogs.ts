@@ -1,6 +1,8 @@
 import "@legacy/ui-dialog.js";
 
 type DialogApi = {
+  alert: (message: string, options?: { tone?: string }) => Promise<void>;
+  confirm: (message: string, options?: { tone?: string }) => Promise<boolean>;
   toast: (message: string, options?: { tone?: string }) => void;
   prompt: (message: string, value?: string) => Promise<string | null>;
 };

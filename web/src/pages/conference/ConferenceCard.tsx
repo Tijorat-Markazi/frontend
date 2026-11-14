@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Lang, Localized } from "@legacy/data.js";
 import { useI18n } from "../../shell/i18n";
-import { safeHttpUrl } from "../../shell/market/mk";
+import { auth } from "../../shell/session";
 import { useApiJson } from "../../shell/useApiJson";
 
 export type Conference = {
@@ -45,7 +45,7 @@ const MONTHS: Record<Lang, readonly string[]> = {
 
 export function formatConferenceTime(value: string | undefined, lang: Lang): string {
   const date = new Date(value ?? "");
-  if (Number.isNaN(date.getTime())) return value || "—";
+  if (Number.isNaN(date.getTime())) return "—";
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${date.getDate()} ${MONTHS[lang][date.getMonth()]} ${date.getFullYear()}, ${hours}:${minutes}`;
@@ -98,7 +98,7 @@ function ScheduledConference({ conference }: { conference: Conference }) {
     isOpen && conference.link
       ? conference.id
         ? `/api/conference/join?id=${encodeURIComponent(conference.id)}`
-        : safeHttpUrl(conference.link)
+        : auth.safeUrl(conference.link)
       : "";
 
   return (

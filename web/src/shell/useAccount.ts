@@ -1,41 +1,34 @@
-import { useCallback, useState } from "react";
-import { readStored, removeStored } from "./storage";
-
-/* Most privileged first: rais and admin share the admin panel. */
-const PANELS = [
-  { key: "kg_admin", url: "admin.html" },
-  { key: "kg_rais", url: "admin.html" },
-  { key: "kg_as", url: "association.html" },
-  { key: "kg_co", url: "company.html" },
-  { key: "kg_an", url: "tahlil.html" },
-  { key: "kg_by", url: "xaridor.html" },
-] as const;
-
-const ALL_SESSION_KEYS = [...PANELS.map(panel => panel.key), "kg_email", "kg_guest_id", "kg_demo_email"];
-
-function currentPanel(): string | null {
-  const match = PANELS.find(
-    ({ key }) => readStored("sessionStorage", key) || readStored("localStorage", key),
-  );
-  return match ? match.url : null;
-}
+import { useState } from "react";
+import { dialogs } from "./dialogs";
+import { auth, useSession } from "./session";
 
 interface Account {
   /** The cabinet this session belongs to, or null when signed out. */
   panelUrl: string | null;
+  isLoggingOut: boolean;
   logout: () => void;
 }
 
 export function useAccount(): Account {
-  const [panelUrl] = useState(currentPanel);
+  const session = useSession();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const logout = useCallback(() => {
-    ALL_SESSION_KEYS.forEach(key => {
-      removeStored("sessionStorage", key);
-      removeStored("localStorage", key);
-    });
-    window.location.href = "assistant.html";
-  }, []);
+  /* A restricted session may only reach the personal-data rights page. */
+  const panelUrl =
+    session?.authenticated && !session.restricted ? (auth.safeTarget(session.target) ?? "index.html") : null;
 
-  return { panelUrl, logout };
+  const logout = () => {
+    setIsLoggingOut(true);
+    auth
+      .logout()
+      .then(() => {
+        window.location.href = "kirish.html";
+      })
+      .catch((error: unknown) => {
+        setIsLoggingOut(false);
+        void dialogs.alert(error instanceof Error ? error.message : String(error));
+      });
+  };
+
+  return { panelUrl, isLoggingOut, logout };
 }

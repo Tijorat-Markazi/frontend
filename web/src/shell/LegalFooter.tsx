@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useI18n } from "./i18n";
 import { readOperatorField } from "./legal/types";
 import type { DocLang, LegalConfig, LocalizedText, OperatorField } from "./legal/types";
-import { readStored } from "./storage";
+import { auth } from "./session";
+import { useIsOversight } from "./useIsOversight";
 
 /* Fixed on purpose: an href built from fetched data is one refactor away from
    an href built from user data. */
@@ -45,11 +46,13 @@ function readField(field: OperatorField, docLang: DocLang): string {
 
 export function LegalFooter() {
   const { lang } = useI18n();
+  const isOversight = useIsOversight();
   const [config, setConfig] = useState<LegalConfig | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/api/legal", { signal: controller.signal })
+    auth
+      .fetch("/api/legal", { signal: controller.signal })
       .then(response => response.json() as Promise<LegalConfig>)
       .then(body => {
         if (body?.ok) setConfig(body);
@@ -81,7 +84,7 @@ export function LegalFooter() {
   const hasContact = Boolean(email || phone || showDpo);
 
   /* Only oversight learns the requisites are unfilled, and where to fix it. */
-  const showTodo = !config.ready && readStored("sessionStorage", "kg_admin") === "1";
+  const showTodo = !config.ready && isOversight;
 
   return (
     <div className="footer-legal" id="footerLegal">

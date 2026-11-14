@@ -42,6 +42,16 @@ describe("BiznesIdPage card", () => {
     await waitFor(() => expect(document.title).toBe("Alfa MChJ — Business ID"));
   });
 
+  it("shows an address that carries mail parameters as text, not as a link", async () => {
+    const loaded = "a@b.uz?bcc=x@evil.example&body=pay";
+    setSearch("?id=TM-1");
+    stubApi({ [CARD_API]: { ...COMPANY_CARD, contact: { email: loaded } } });
+
+    renderPage(<BiznesIdPage />);
+
+    expect((await screen.findByText(loaded)).tagName).toBe("SPAN");
+  });
+
   it("links the association and encodes the QR request", async () => {
     setSearch("?id=TM-1");
     stubApi({ [CARD_API]: COMPANY_CARD });

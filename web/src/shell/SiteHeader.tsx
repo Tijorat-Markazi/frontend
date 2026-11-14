@@ -27,7 +27,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const { lang, t, cycleLang } = useI18n();
   const { theme, toggleTheme } = useTheme();
-  const { panelUrl, logout } = useAccount();
+  const { panelUrl, isLoggingOut, logout } = useAccount();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { headerInnerRef, isCollapsed, isBarCollapsed, isCompact } = useHeaderFit(`${lang}:${panelUrl ?? ""}`);
 
@@ -54,7 +54,7 @@ export function SiteHeader({
         </a>
       )}
       {isSignedIn && (
-        <button id="globalLogout" type="button" className={buttonClass} onClick={logout}>
+        <button id="globalLogout" type="button" className={buttonClass} disabled={isLoggingOut} onClick={logout}>
           {t("asst_logout")}
         </button>
       )}

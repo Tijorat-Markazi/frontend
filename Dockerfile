@@ -3,10 +3,12 @@ FROM node:24.21.0-bookworm-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc
 WORKDIR /app
 ENV CI=true
 COPY package.json package-lock.json ./
+COPY web/package.json ./web/
 RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --no-audit --no-fund
 COPY scripts ./scripts
 COPY *.html *.js *.css *.svg ./
 COPY assets ./assets
+COPY web ./web
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.30.0-alpine@sha256:808f7846d21a9c94cf53833e8807a00a33fd0b65cc47fb05b79efe366c2d201f AS runtime

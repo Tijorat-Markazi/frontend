@@ -1,6 +1,7 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HOSTILE, renderPage, stubApi } from "../../test/renderPage";
+import { auth, setTestSession } from "../../test/fakeSession";
 import { ConferencePage } from "./ConferencePage";
 import { formatConferenceTime } from "./ConferenceCard";
 
@@ -8,65 +9,118 @@ const API = "/api/conference";
 const NOW = new Date("2030-01-01T09:00:00").getTime();
 const at = (time: string): string => `2030-01-01T${time}:00`;
 
-function signIn(): void {
-  localStorage.setItem("kg_email", "ali@x.uz");
-}
-
 async function flush(): Promise<void> {
   await act(async () => {
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+    for (let i = 0; i < 6; i++) await Promise.resolve();
   });
 }
 
+function joinAsGuest(): void {
+  setTestSession({ guest: { email: "ali@x.uz" } });
+}
+
 describe("ConferencePage gate", () => {
-  it("asks for an email and hides the conference until one is given", () => {
+  it("shows neither gate nor conference until the session is known", () => {
+    stubApi({});
+    auth.ready.mockImplementationOnce(() => new Promise(() => undefined));
+
+    const { container } = renderPage(<ConferencePage />);
+
+    expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(true);
+    expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(true);
+  });
+
+  it("asks a new guest for an email and focuses the field", async () => {
     stubApi({});
 
     const { container } = renderPage(<ConferencePage />);
+    await flush();
 
     expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false);
     expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(true);
     expect(document.activeElement?.id).toBe("emailInput");
   });
 
-  it("ignores a stored value that is not an email", () => {
-    localStorage.setItem("kg_email", "not-an-email");
+  it("shows the session error at the gate when the session cannot load", async () => {
     stubApi({});
+    auth.ready.mockImplementationOnce(() => Promise.reject(new Error("Session service unavailable")));
 
-    const { container } = renderPage(<ConferencePage />);
+    renderPage(<ConferencePage />);
 
-    expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false);
+    expect(await screen.findByText("Session service unavailable")).toBeTruthy();
   });
 
-  it("rejects an invalid email, then lowercases and stores a valid one", async () => {
+  it("rejects an invalid email without contacting the server", async () => {
+    stubApi({});
+    const { container } = renderPage(<ConferencePage />);
+    await flush();
+
+    fireEvent.change(container.querySelector("#emailInput")!, { target: { value: "a@b" } });
+    fireEvent.submit(container.querySelector("#emailForm")!);
+
+    expect(await screen.findByText("Töğri email kiriting")).toBeTruthy();
+    expect(auth.guest).not.toHaveBeenCalled();
+  });
+
+  it("registers a valid email on the session, lowercased, and stores nothing locally", async () => {
     stubApi({ [API]: {} });
     const { container } = renderPage(<ConferencePage />);
-    const input = container.querySelector<HTMLInputElement>("#emailInput")!;
+    await flush();
 
-    fireEvent.change(input, { target: { value: "a@b" } });
-    fireEvent.submit(container.querySelector("#emailForm")!);
-    expect(screen.getByText("Töğri email kiriting")).toBeTruthy();
-
-    fireEvent.change(input, { target: { value: " Ali@X.uz " } });
+    fireEvent.change(container.querySelector("#emailInput")!, { target: { value: " Ali@X.uz " } });
     fireEvent.submit(container.querySelector("#emailForm")!);
     await flush();
 
-    expect(localStorage.getItem("kg_email")).toBe("ali@x.uz");
+    expect(auth.guest).toHaveBeenCalledWith("ali@x.uz", "");
     expect(container.querySelector("#uEmail")?.textContent).toBe("ali@x.uz");
+    expect(localStorage.getItem("kg_email")).toBeNull();
   });
 
-  it("forgets the email when switching", async () => {
-    signIn();
+  it("shows the server's message when registering the email fails", async () => {
+    stubApi({});
+    auth.guest.mockImplementationOnce(() => Promise.reject(new Error("Server rejected it")));
+    const { container } = renderPage(<ConferencePage />);
+    await flush();
+
+    fireEvent.change(container.querySelector("#emailInput")!, { target: { value: "ali@x.uz" } });
+    fireEvent.submit(container.querySelector("#emailForm")!);
+
+    expect(await screen.findByText("Server rejected it")).toBeTruthy();
+    expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(true);
+  });
+
+  it("returns to the gate when switching email", async () => {
+    joinAsGuest();
     stubApi({ [API]: {} });
     const { container } = renderPage(<ConferencePage />);
     await flush();
 
     fireEvent.click(container.querySelector("#switchEmail")!);
 
-    expect(localStorage.getItem("kg_email")).toBeNull();
     expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false);
+  });
+
+  it("keeps a rights-only session at the gate, since the server lets it reach nothing here", async () => {
+    setTestSession({ authenticated: true, restricted: true, role: "company", user: { name: "Alfa MChJ" } });
+    stubApi({ [API]: {} });
+
+    const { container } = renderPage(<ConferencePage />);
+    await flush();
+
+    await waitFor(() => expect(container.querySelector<HTMLElement>("#confLogin")?.hidden).toBe(false));
+    expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(true);
+  });
+
+  it("lets a signed-in account straight in with no way to switch", async () => {
+    setTestSession({ authenticated: true, role: "company", user: { name: "Alfa MChJ" } });
+    stubApi({ [API]: {} });
+
+    const { container } = renderPage(<ConferencePage />);
+    await flush();
+
+    await waitFor(() => expect(container.querySelector<HTMLElement>("#confApp")?.hidden).toBe(false));
+    expect(container.querySelector("#uEmail")?.textContent).toBe("Alfa MChJ");
+    expect(container.querySelector<HTMLElement>("#switchEmail")?.hidden).toBe(true);
   });
 });
 
@@ -75,7 +129,7 @@ describe("ConferencePage card", () => {
 
   async function renderAt(conference: object) {
     vi.useFakeTimers({ now: NOW, toFake: ["Date", "setInterval", "clearInterval"] });
-    signIn();
+    joinAsGuest();
     stubApi({ [API]: conference });
     const view = renderPage(<ConferencePage />);
     await flush();
@@ -137,8 +191,8 @@ describe("formatConferenceTime", () => {
     expect(formatConferenceTime(at("09:05"), "ru")).toBe("1 января 2030, 09:05");
   });
 
-  it("returns an unparseable value as written", () => {
-    expect(formatConferenceTime("soon", "uz")).toBe("soon");
+  it("shows a dash for a value that is not a date", () => {
+    expect(formatConferenceTime("soon", "uz")).toBe("—");
     expect(formatConferenceTime(undefined, "uz")).toBe("—");
   });
 });
