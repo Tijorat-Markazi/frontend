@@ -12,6 +12,8 @@ credentials.*
 secrets.*
 node_modules
 dist
+web/node_modules
+web/dist
 coverage
 tests
 *.log

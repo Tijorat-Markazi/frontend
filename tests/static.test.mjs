@@ -42,6 +42,11 @@ test('local stylesheets and scripts are versioned and everything else is left al
   assert.equal(stamped, page({ css: '"styles.css?v=aaa"', js: "'auth.js?v=bbb'" }));
 });
 
+test('React bundles keep their own hashed names', () => {
+  const page = '<script type="module" src="/_r/admin-YpwGuWSa.js"></script><link rel="modulepreload" href="/_r/shell-B1.js" /><link rel="stylesheet" href="/_r/standard-iG8.css" />';
+  assert.equal(stampAssets(page, () => 'x'), page);
+});
+
 test('a changed file gets a new URL and an unchanged file keeps its URL', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'version-assets-'));
   const write = (name, text) => writeFileSync(path.join(directory, name), text);
