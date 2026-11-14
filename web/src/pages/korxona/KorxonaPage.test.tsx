@@ -53,6 +53,7 @@ describe("KorxonaPage", () => {
         company: { name: HOSTILE, sector: HOSTILE },
         showroom: [
           { id: "p1", name: HOSTILE, img: "//evil.example/x.jpg" },
+          { id: "p3", name: "Ip", img: "/\\evil.example/x.jpg" },
           { id: "p2", name: "Paxta", img: "/uploads/a.jpg" },
         ],
       },

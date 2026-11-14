@@ -15,7 +15,6 @@ type Inquiry = {
   replies?: Reply[];
 };
 
-type SendResult = { viewKey?: string };
 /* The key, not the text, so the message follows a language switch. */
 type Notice = { key: string; kind: "ok" | "err" };
 
@@ -37,21 +36,10 @@ export function InquirySection({ companyId, companyName, productId, productName,
   const isSending = useRef(false);
   const latestThreadLoad = useRef(0);
 
-  /* The buyer's own inquiries to this company, with the company's replies. */
+  /* The session's own inquiries to this company, with the company's replies. */
   const loadThread = useCallback(async () => {
-    const email = identity.email();
-    const viewKey = identity.viewKey();
-    if (!email) return;
-    if (!viewKey) {
-      setThread([]);
-      return;
-    }
     const run = ++latestThreadLoad.current;
-    const result = await marketApi<{ items: Inquiry[] }>("/api/bozor/inquiry/mine", {
-      viewKey,
-      email,
-      name: identity.name(),
-    });
+    const result = await marketApi<{ items: Inquiry[] }>("/api/bozor/inquiry/mine", {});
     if (run !== latestThreadLoad.current) return;
     setThread((result.items ?? []).filter(item => item.productId === productId || item.companyName === companyName));
   }, [productId, companyName]);
@@ -74,11 +62,10 @@ export function InquirySection({ companyId, companyName, productId, productName,
     if (isSending.current) return;
     isSending.current = true;
     const name = read("name");
-    const result = await marketApi<SendResult>("/api/bozor/inquiry", {
+    const result = await marketApi<object>("/api/bozor/inquiry", {
       companyId,
       productId,
       source: "showroom",
-      viewKey: identity.viewKey(),
       name,
       company: read("org"),
       email,
@@ -94,9 +81,7 @@ export function InquirySection({ companyId, companyName, productId, productName,
       return;
     }
     /* Remember the address so the reply can be shown next time they visit. */
-    if (email) identity.setPerson(email, name);
-    /* The capability key that lets this browser read the thread back. */
-    if (result.viewKey) identity.setViewKey(result.viewKey);
+    if (email) await identity.setPerson(email, name);
     setNotice({ key: "pd_send_ok", kind: "ok" });
     form.querySelector<HTMLTextAreaElement>("#pdMessage")!.value = "";
     void loadThread();

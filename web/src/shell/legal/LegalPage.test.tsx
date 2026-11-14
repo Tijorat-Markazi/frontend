@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HOSTILE, renderPage, stubApi } from "../../test/renderPage";
+import { setTestSession } from "../../test/fakeSession";
 import { LegalPage } from "./LegalPage";
 import type { LegalText } from "./types";
 
@@ -100,7 +101,7 @@ describe("LegalPage", () => {
     expect(visitor.container.querySelector(".lg-note-warn")?.textContent).toContain("Eslatma");
     visitor.unmount();
 
-    sessionStorage.setItem("kg_admin", "1");
+    setTestSession({ authenticated: true, role: "admin" });
     const admin = renderLegal();
     await screen.findByText("Marka kirish");
     expect(admin.container.querySelector(".lg-note-warn")?.textContent).toContain("Admin panel");

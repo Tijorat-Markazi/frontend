@@ -3,6 +3,7 @@ import type { Lang } from "@legacy/data.js";
 import { FilterSelect } from "../../shell/FilterSelect";
 import { foldUzbek } from "../../shell/foldUzbek";
 import { useI18n } from "../../shell/i18n";
+import { safeImageUrl } from "../../shell/market/mk";
 import { PublicPage } from "../../shell/PublicPage";
 import { SiteFooter } from "../../shell/SiteFooter";
 import { trustedHtml } from "../../shell/trustedHtml";
@@ -40,8 +41,7 @@ const tradeOf = (item: ShowroomItem): string => item.trade || "export";
 function ShowroomCard({ item }: { item: ShowroomItem }) {
   const { t } = useI18n();
   const trade = tradeOf(item);
-  /* "//host/x.jpg" looks like a path but loads from somebody else's server. */
-  const image = item.img?.startsWith("//") ? "" : item.img;
+  const image = safeImageUrl(item.img);
   const content = (
     <>
       {image ? (
@@ -57,7 +57,7 @@ function ShowroomCard({ item }: { item: ShowroomItem }) {
           {item.company}
           {item.sector && ` · ${item.sector}`}
         </span>{" "}
-        <span className={`trade-badge trade-${trade}`}>
+        <span className={`trade-badge trade-${trade === "import" ? "import" : "export"}`}>
           {t(trade === "import" ? "show_trade_imp" : "show_trade_exp")}
         </span>{" "}
         <span className="show-more">{t("show_more")}</span>

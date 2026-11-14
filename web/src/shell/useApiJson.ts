@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { auth } from "./session";
 
 export type ApiState<T> = { status: "loading" } | { status: "error" } | { status: "ready"; data: T };
 
@@ -9,7 +10,8 @@ export function useApiJson<T>(url: string): ApiState<T> {
   useEffect(() => {
     const controller = new AbortController();
     setState({ status: "loading" });
-    fetch(url, { signal: controller.signal })
+    auth
+      .fetch(url, { signal: controller.signal })
       .then(response => {
         if (!response.ok) throw new Error(`${url} answered ${response.status}`);
         return response.json() as Promise<T>;

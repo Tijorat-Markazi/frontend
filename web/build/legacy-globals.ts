@@ -11,6 +11,7 @@ export const LEGACY_MODULES: Readonly<Record<string, readonly string[]>> = {
   "legal-text-shartlar.js": ["LEGAL_SHARTLAR"],
   "markets-i18n.js": ["T_MK", "T_KORXONA", "T_PRODUCT", "T_BIZID"],
   "ui-dialog.js": [],
+  "auth.js": [],
   "skyline.js": ["kgSkyline"],
   "monument-bg.js": ["kgMonumentBackground"],
 };

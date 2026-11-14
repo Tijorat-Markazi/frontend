@@ -59,6 +59,8 @@ declare module "@legacy/markets-i18n.js" {
 
 declare module "@legacy/ui-dialog.js";
 
+declare module "@legacy/auth.js";
+
 declare module "@legacy/skyline.js" {
   export function kgSkyline(mount: HTMLElement): void;
 }

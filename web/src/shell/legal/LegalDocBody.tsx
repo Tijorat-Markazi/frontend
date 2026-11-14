@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import type { ReactNode } from "react";
-import { readStored } from "../storage";
+import { useIsOversight } from "../useIsOversight";
 import { pickDocText, readOperatorField } from "./types";
 import type { DocLang, LegalConfig, LegalText, LocalizedText } from "./types";
 
@@ -51,7 +51,7 @@ export function LegalDocBody({ docKey, doc, config, lang }: BodyProps) {
   const docLang: DocLang = lang === "ru" ? "ru" : "uz";
   const pick = (text: LocalizedText | undefined): string => pickDocText(text, docLang);
   const fill = createFiller(config, docKey, docLang);
-  const isOversight = readStored("sessionStorage", "kg_admin") === "1";
+  const isOversight = useIsOversight();
 
   const paragraphs = (rows: LocalizedText[] | undefined): ReactNode =>
     rows?.map(row => <p key={row.uz}>{fill(pick(row))}</p>);

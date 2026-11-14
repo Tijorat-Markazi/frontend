@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { T_PRODUCT } from "@legacy/markets-i18n.js";
 import { HOSTILE, renderPage, setSearch, stubApi } from "../../test/renderPage";
+import { auth, setTestSession } from "../../test/fakeSession";
 import { MahsulotPage } from "./MahsulotPage";
 
 const ITEM = "/api/showroom/item?id=p1";
@@ -39,23 +40,30 @@ describe("MahsulotPage", () => {
     expect(screen.getByText("Ip").closest("a")?.getAttribute("href")).toBe("mahsulot.html?id=p%2F2");
   });
 
+  it("fills the form from the session", async () => {
+    setTestSession({ guest: { email: "ali@x.uz", name: "Ali" } });
+    stubApi({ [ITEM]: PRODUCT });
+
+    const { container } = await renderProduct();
+
+    expect(container.querySelector<HTMLInputElement>("#pdEmail")?.value).toBe("ali@x.uz");
+    expect(container.querySelector<HTMLInputElement>("#pdName")?.value).toBe("Ali");
+  });
+
   it("refuses to send an inquiry with no way to reach the buyer", async () => {
     stubApi({ [ITEM]: PRODUCT });
     const { container } = await renderProduct();
 
     fireEvent.change(container.querySelector("#pdName")!, { target: { value: "Ali" } });
+    fireEvent.change(container.querySelector("#pdEmail")!, { target: { value: "" } });
     fireEvent.submit(container.querySelector("#pdForm")!);
 
     expect(await screen.findByText(T_PRODUCT.pd_need_contact![0])).toBeTruthy();
     expect(postsTo("/api/bozor/inquiry")).toHaveLength(0);
   });
 
-  it("sends the inquiry, remembers the buyer and clears the message", async () => {
-    stubApi({
-      [ITEM]: PRODUCT,
-      "/api/bozor/inquiry": { ok: true, viewKey: "key-1" },
-      "/api/bozor/inquiry/mine": { items: [] },
-    });
+  it("sends the inquiry, records the buyer on the session and clears the message", async () => {
+    stubApi({ [ITEM]: PRODUCT, "/api/bozor/inquiry": { ok: true }, "/api/bozor/inquiry/mine": { items: [] } });
     const { container } = await renderProduct();
     const message = container.querySelector<HTMLTextAreaElement>("#pdMessage")!;
 
@@ -64,17 +72,28 @@ describe("MahsulotPage", () => {
     fireEvent.change(message, { target: { value: "Narx?" } });
     fireEvent.submit(container.querySelector("#pdForm")!);
 
-    await waitFor(() => expect(localStorage.getItem("mk_iqkey")).toBe("key-1"));
-    const body = JSON.parse(String(postsTo("/api/bozor/inquiry")[0].body)) as Record<string, string>;
-    expect(body).toMatchObject({ companyId: "c1", productId: "p1", source: "showroom", email: "ali@x.uz", message: "Narx?", viewKey: "" });
-    expect(localStorage.getItem("mk_email")).toBe("ali@x.uz");
-    expect(localStorage.getItem("mk_name")).toBe("Ali");
     await waitFor(() => expect(message.value).toBe(""));
+    const body = JSON.parse(String(postsTo("/api/bozor/inquiry")[0].body)) as Record<string, string>;
+    expect(body).toMatchObject({ companyId: "c1", productId: "p1", source: "showroom", email: "ali@x.uz", message: "Narx?" });
+    expect(body).not.toHaveProperty("viewKey");
+    expect(auth.guest).toHaveBeenCalledWith("ali@x.uz", "Ali");
+    expect(localStorage.getItem("mk_email")).toBeNull();
+    expect(localStorage.getItem("mk_iqkey")).toBeNull();
   });
 
-  it("shows the buyer's thread, keeping only this company's items", async () => {
-    localStorage.setItem("mk_email", "ali@x.uz");
-    localStorage.setItem("mk_iqkey", "key-1");
+  it("does not overwrite an account holder's session with a guest contact", async () => {
+    setTestSession({ authenticated: true, role: "company", user: { name: "Alfa", email: "a@b.uz" } });
+    stubApi({ [ITEM]: PRODUCT, "/api/bozor/inquiry": { ok: true }, "/api/bozor/inquiry/mine": { items: [] } });
+    const { container } = await renderProduct();
+    fireEvent.change(container.querySelector("#pdEmail")!, { target: { value: "a@b.uz" } });
+
+    fireEvent.submit(container.querySelector("#pdForm")!);
+
+    await waitFor(() => expect(container.querySelector<HTMLElement>("#pdMsg")?.hidden).toBe(false));
+    expect(auth.guest).not.toHaveBeenCalled();
+  });
+
+  it("asks the server for the session's own thread, keeping only this company's items", async () => {
     stubApi({
       [ITEM]: PRODUCT,
       "/api/bozor/inquiry/mine": {
@@ -91,8 +110,7 @@ describe("MahsulotPage", () => {
     expect(screen.queryByText("Begona")).toBeNull();
     expect(screen.getByText(HOSTILE)).toBeTruthy();
     expect(container.querySelector("#pdThread img")).toBeNull();
-    const asked = JSON.parse(String(postsTo("/api/bozor/inquiry/mine")[0].body)) as Record<string, string>;
-    expect(asked).toMatchObject({ viewKey: "key-1", email: "ali@x.uz" });
+    expect(JSON.parse(String(postsTo("/api/bozor/inquiry/mine")[0].body))).toEqual({});
   });
 
   it("sends one inquiry when the form is submitted twice quickly", async () => {
@@ -110,6 +128,7 @@ describe("MahsulotPage", () => {
   it("translates a shown notice when the language changes", async () => {
     stubApi({ [ITEM]: PRODUCT });
     const { container } = await renderProduct();
+    fireEvent.change(container.querySelector("#pdEmail")!, { target: { value: "" } });
     fireEvent.submit(container.querySelector("#pdForm")!);
     expect(await screen.findByText(T_PRODUCT.pd_need_contact![0])).toBeTruthy();
 

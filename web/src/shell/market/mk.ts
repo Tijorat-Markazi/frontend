@@ -1,7 +1,8 @@
 import { LANGS, T } from "@legacy/data.js";
 import type { Lang, Localized } from "@legacy/data.js";
 import { useI18n } from "../i18n";
-import { readStored, removeStored, writeStored } from "../storage";
+import { dialogs } from "../dialogs";
+import { auth } from "../session";
 
 export type Dictionary = Readonly<Record<string, Localized | undefined>>;
 export type Translate = (key: string, fallback?: string) => string;
@@ -32,11 +33,11 @@ export function formatDay(timestamp: unknown, lang: Lang): string {
 export const safeHttpUrl = (url: string | undefined): string =>
   url && /^https?:\/\//i.test(url) ? url : "";
 
-/** Also allows same-origin uploads, but not "//host/x.jpg", which loads from another server. */
+/** Same-origin uploads and web addresses, but not "//host/x.jpg", which loads from another server. */
 export function safeImageUrl(url: string | undefined): string {
-  if (!url) return "";
-  if (safeHttpUrl(url)) return url;
-  return url.startsWith("/") && !url.startsWith("//") ? url : "";
+  /* Browsers read a backslash here as a slash. */
+  if (!url || /^[/\\]{2}/.test(url)) return "";
+  return auth.safeUrl(url, true);
 }
 
 export function queryString(params: Record<string, string>): string {
@@ -54,22 +55,34 @@ export async function marketApi<T extends object>(path: string, body?: object): 
     const options = body
       ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
       : undefined;
-    const response = await fetch(path, options);
+    const response = await auth.fetch(path, options);
     return (await response.json()) as ApiResult<T>;
   } catch {
     return { error: "network" } as ApiResult<T>;
   }
 }
 
-/* The e-mail identity is not a credential and persists like the language. */
+/* Contact details live on the server session; email is contact data, not a credential. */
+let contact: { email: string; name: string } | null = null;
+
 export const identity = {
-  email: (): string => readStored("localStorage", "mk_email") ?? "",
-  name: (): string => readStored("localStorage", "mk_name") ?? "",
-  viewKey: (): string => readStored("localStorage", "mk_iqkey") ?? "",
-  setViewKey: (key: string): void => writeStored("localStorage", "mk_iqkey", key),
-  setPerson(email: string, name: string): void {
-    if (email) writeStored("localStorage", "mk_email", email);
-    else removeStored("localStorage", "mk_email");
-    if (name) writeStored("localStorage", "mk_name", name);
+  email(): string {
+    const session = auth.current();
+    return contact?.email || session?.user?.email || session?.guest?.email || "";
+  },
+  name(): string {
+    const session = auth.current();
+    return contact?.name || session?.user?.name || session?.guest?.name || "";
+  },
+  async setPerson(email: string, name: string): Promise<boolean> {
+    try {
+      const session = await auth.ready();
+      if (session.role === "guest") await auth.guest(email, name);
+      contact = { email, name };
+      return true;
+    } catch (error: unknown) {
+      void dialogs.alert(error instanceof Error ? error.message : String(error));
+      return false;
+    }
   },
 };

@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderPage } from "../test/renderPage";
+import { setTestSession } from "../test/fakeSession";
 import { LegalFooter } from "./LegalFooter";
 
 function stubLegalResponse(body: unknown): void {
@@ -40,7 +41,7 @@ describe("LegalFooter", () => {
   });
 
   it("tells only oversight that requisites are unfilled", async () => {
-    sessionStorage.setItem("kg_admin", "1");
+    setTestSession({ authenticated: true, role: "admin" });
     stubLegalResponse({ ok: true, ready: false, docs: DOCS, operator: {} });
 
     const { container } = renderPage(<LegalFooter />);
