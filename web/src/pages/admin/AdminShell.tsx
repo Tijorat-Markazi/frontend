@@ -146,6 +146,10 @@ export function AdminShell({ role, theme, onToggleTheme, onLogout, initialView =
             <span />
           </button>
           <h1 id="viewTitle">{tx(VIEW_TITLE[view])}</h1>
+          {/* As in the company and association cabinets: the assistant answers under the signed-in account. */}
+          <a className="btn btn-primary" id="aiNav" href="assistant.html">
+            🤖 {tx("nav_ai")}
+          </a>
           <button
             className="icon-btn"
             id="themeBtn"

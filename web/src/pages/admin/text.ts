@@ -8,6 +8,7 @@ export const AT = {
   lg_err:["Notöğri parol","Неверный пароль","Wrong password"],
   lg_hint:["Hisobingiz bilan kiring.","Войдите в свою учётную запись.","Sign in with your account."],
   logout:["Çiqiş","Выход","Logout"],
+  nav_ai:["AI Assistant","AI Ассистент","AI Assistant"],
   back:["← Saytga qaytiş","← Вернуться на сайт","← Back to site"],
   nav_dash:["Dashboard","Дашборд","Dashboard"],
   nav_comp:["Kompaniyalar","Компании","Companies"],
