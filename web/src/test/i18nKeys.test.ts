@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { T } from "@legacy/data.js";
+import { T_DSR } from "@legacy/dsr-i18n.js";
 import { T_BIZID, T_KORXONA, T_MK, T_PRODUCT } from "@legacy/markets-i18n.js";
+import { T_ANALYST, T_BOZOR, T_BREG, T_MEHNAT, T_MOLIYA, T_REGISTER, T_XARIDOR } from "@legacy/markets-i18n.js";
 
 const SRC = path.resolve(__dirname, "..");
 const KEY_PATTERN = /\bt\("([a-zA-Z0-9_]+)"\)|\b(?:labelKey|eyebrowKey|headingKey|bodyKey)[:=]\s*\{?"([a-zA-Z0-9_]+)"/g;
@@ -23,7 +25,7 @@ describe("translation keys", () => {
     );
 
     // Act
-    const known = { ...T, ...T_MK, ...T_KORXONA, ...T_PRODUCT, ...T_BIZID };
+    const known = { ...T, ...T_BOZOR, ...T_MEHNAT, ...T_REGISTER, ...T_BREG, ...T_DSR, ...T_MK, ...T_KORXONA, ...T_PRODUCT, ...T_BIZID, ...T_MOLIYA, ...T_ANALYST, ...T_XARIDOR };
     const missing = [...new Set(used)].filter(key => !known[key]);
 
     // Assert

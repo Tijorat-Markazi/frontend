@@ -9,14 +9,23 @@ export type Session = {
   target?: string;
   csrfToken: string;
   guest?: { email?: string; name?: string };
-  user?: { id?: string; name?: string; email?: string } | null;
+  user?: SessionUser | null;
 };
 
-type AuthApi = {
+/** The signed-in account as the server describes it. Never a credential. */
+export type SessionUser = { id?: string; role?: string; login?: string; name?: string; email?: string };
+
+export type AuthApi = {
   ready: (refresh?: boolean) => Promise<Session>;
   current: () => Session | null;
   fetch: (path: string, options?: RequestInit) => Promise<Response>;
+  /** Reads JSON and rejects with the server's error (and its `status`) when refused. A body makes it a POST. */
+  json: <T = unknown>(path: string, body?: unknown, options?: RequestInit) => Promise<T>;
+  /** Rejects when the pair is refused. "rights" opens a session limited to the personal-data page. */
+  login: (login: string, password: string, purpose?: string) => Promise<Session>;
   logout: () => Promise<Session>;
+  /** The account behind a full (not restricted) session, when its role is one of `roles`. */
+  user: (roles?: readonly string[]) => SessionUser | null;
   guest: (email: string, name: string) => Promise<Session>;
   safeTarget: (target?: string) => string | null;
   safeUrl: (value?: string, allowImageData?: boolean) => string;
