@@ -3272,3 +3272,15 @@ textarea.dsr-ans{min-width:260px;font-family:inherit;font-size:13px;line-height:
 @media (prefers-reduced-motion:reduce){
   .hm-wcard,.hm-wcard:hover{transform:none}
 }
+
+/* ── assistant sign-in: the close button inside the arch ──
+   The card's top corners are rounded into an arch (--arch). A button 14px
+   from the corner sat outside that curve, overhanging the edge. It moves in
+   to where the card is still solid, and becomes a round, visible target. */
+.asst-login .lcard-close{top:26px;right:44px;width:36px;height:36px;border-radius:50%;
+  background:var(--bg-soft);border:1px solid var(--line-2);font-size:15px;color:var(--ink-soft,var(--muted))}
+.asst-login .lcard-close:hover{background:var(--card);color:var(--ink);border-color:var(--gold-soft)}
+.asst-login .lcard-close:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+@media(max-width:600px){
+  .asst-login .lcard-close{top:22px;right:34px}
+}
