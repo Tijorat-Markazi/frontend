@@ -18,7 +18,8 @@ describe("AssistantPage sign-in", () => {
     expect(isHidden(container, "#asstLogin")).toBe(false);
     expect(isHidden(container, "#asstApp")).toBe(true);
     expect(screen.getByRole("heading", { name: "Tizimga kiriş" })).toBeTruthy();
-    expect(container.querySelector("footer.footer")).not.toBeNull();
+    /* With the chat hidden, a footer would sit under the header behind the card. */
+    expect(container.querySelector("footer.footer")).toBeNull();
   });
 
   it("signs in through the session and opens the cabinet the server names", async () => {
