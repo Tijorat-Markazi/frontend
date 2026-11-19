@@ -1,4 +1,4 @@
-import { fireEvent } from "@testing-library/react";
+import { fireEvent, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { bodiesSentTo, refused } from "../../shell/cabinet/testApi";
 import { dialogs } from "../../shell/dialogs";
@@ -112,14 +112,30 @@ describe("AssistantPage demo chat", () => {
     expect(container.querySelector<HTMLButtonElement>("#micBtn")?.disabled).toBe(true);
   });
 
-  it("refuses a file type it cannot read", async () => {
+  it("takes a file of any type; the server decides how to read it", async () => {
     const alert = vi.spyOn(dialogs, "alert").mockResolvedValue(undefined);
     const { container } = await enterDemo();
 
-    fireEvent.change(container.querySelector("#fileInput")!, { target: { files: [new File(["x"], "app.exe")] } });
+    expect(container.querySelector("#fileInput")?.hasAttribute("accept")).toBe(false);
+    fireEvent.change(container.querySelector("#fileInput")!, { target: { files: [new File(["x"], "talim-al9qyf.doc")] } });
+    /* jsdom's FileReader answers on a later task, past what flush() waits for */
+    await waitFor(() => expect(isHidden(container, "#attachChip")).toBe(false));
+
+    expect(alert).not.toHaveBeenCalled();
+    expect(container.querySelector("#attachChip")?.textContent).toContain("talim-al9qyf.doc");
+  });
+
+  it("says so when a file cannot be read", async () => {
+    const alert = vi.spyOn(dialogs, "alert").mockResolvedValue(undefined);
+    vi.spyOn(FileReader.prototype, "readAsDataURL").mockImplementation(function (this: FileReader) {
+      queueMicrotask(() => this.onerror?.(new ProgressEvent("error") as ProgressEvent<FileReader>));
+    });
+    const { container } = await enterDemo();
+
+    fireEvent.change(container.querySelector("#fileInput")!, { target: { files: [new File(["x"], "hisobot.xls")] } });
     await flush();
 
-    expect(alert).toHaveBeenCalledWith("Bu fayl turi qöllab-quvvatlanmaydi");
+    expect(alert).toHaveBeenCalledWith("Faylni öqib bölmadi — qayta urinib köring");
     expect(isHidden(container, "#attachChip")).toBe(true);
   });
 
