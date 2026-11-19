@@ -239,6 +239,14 @@
   background:var(--card); color:var(--ink); font:inherit; font-size:14.5px; width:100%; }
 .mk-f textarea{ resize:vertical; min-height:84px; line-height:1.55; }
 .mk-f input:focus, .mk-f select:focus, .mk-f textarea:focus{ outline:2px solid var(--mk); outline-offset:1px; }
+/* Without this Safari and iOS keep the native menulist chrome — a bevel and
+   a ▲▼ stepper — on a field that should look like the inputs beside it. The
+   chevron is the one .mk-filter select draws. */
+.mk-f select{ -webkit-appearance:none; appearance:none; cursor:pointer; padding-right:34px;
+  text-overflow:ellipsis;
+  background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
 .mk-f small{ font-size:11.5px; color:var(--muted); }
 .mk-checks{ display:flex; flex-wrap:wrap; gap:8px; }
 .mk-checks label{ display:inline-flex; align-items:center; gap:6px; font-size:13.5px; font-weight:500;
