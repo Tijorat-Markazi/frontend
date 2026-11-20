@@ -47,3 +47,10 @@ export function readOperatorField(field: OperatorField, docLang: DocLang): strin
   if (!field) return "";
   return typeof field === "object" ? pickDocText(field, docLang) : field;
 }
+
+/* An unfilled requisite in srv/legal.js: "[TO'LDIRILSIN: …]", which the 2026
+   alphabet spells "[TÖLDIRILSIN: …]", "[ZAPOLNIT: …]" or "[TO BE COMPLETED: …]".
+   The server sends these as they are, so every reader of /api/legal checks. */
+const PLACEHOLDER = /^\[(T[OÖ]'?LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
+
+export const isPlaceholder = (value: string): boolean => PLACEHOLDER.test(value.trim());

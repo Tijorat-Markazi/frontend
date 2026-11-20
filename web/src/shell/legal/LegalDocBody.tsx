@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { useIsOversight } from "../useIsOversight";
-import { pickDocText, readOperatorField } from "./types";
+import { isPlaceholder, pickDocText, readOperatorField } from "./types";
 import type { DocLang, LegalConfig, LegalText, LocalizedText } from "./types";
 
 /* Cross-links resolve against this fixed map rather than a path from the
@@ -16,8 +16,6 @@ const PAGES: Record<string, string | undefined> = {
 const EXTRA_TITLE: Record<string, LocalizedText | undefined> = {
   rights: { uz: "Mening maʼlumotlarim", ru: "Мои данные", en: "My data" },
 };
-
-const PLACEHOLDER = /^\[(TO'LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
 
 const RETENTION_LABELS: Record<string, LocalizedText | undefined> = {
   account: { uz: "Hisob qaydnomasi", ru: "Учётная запись" },
@@ -137,7 +135,7 @@ function CrossLinks({ keys, config, docLang }: { keys: string[]; config: LegalCo
 function RequisiteValue({ value, docLang }: { value: string | undefined; docLang: DocLang }) {
   const text = value ?? "";
   if (!text) return <span className="lg-todo">{docLang === "ru" ? "не указано" : "körsatilmagan"}</span>;
-  if (PLACEHOLDER.test(text)) return <span className="lg-todo">{text}</span>;
+  if (isPlaceholder(text)) return <span className="lg-todo">{text}</span>;
   return <>{text}</>;
 }
 
