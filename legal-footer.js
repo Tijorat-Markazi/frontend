@@ -40,7 +40,8 @@
   const pick = o => (o && (o[tl()] || o.uz)) || "";
   const val = v => (v && typeof v === "object") ? (v[tl()] || v.uz || "") : (v || "");
 
-  const PLACEHOLDER = /^\[(TO'LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
+  /* "[TÖLDIRILSIN" is the 2026-alphabet spelling of "[TO'LDIRILSIN". */
+  const PLACEHOLDER = /^\[(T[OÖ]'?LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
   const cell = v => {
     const s = String(v == null ? "" : v);
     if(!s) return "";

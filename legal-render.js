@@ -46,7 +46,8 @@
      take a title from. It gets one here. */
   var EXTRA_TITLE = { rights: { uz: "Mening maʼlumotlarim", ru: "Мои данные", en: "My data" } };
 
-  var PLACEHOLDER = /^\[(TO'LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
+  /* "[TÖLDIRILSIN" is the 2026-alphabet spelling of "[TO'LDIRILSIN". */
+  var PLACEHOLDER = /^\[(T[OÖ]'?LDIRILSIN|ZAPOLNIT|TO BE COMPLETED)/;
 
   /* The document files declare `const LEGAL_OFERTA = …` at the top level of a
      classic script. Top-level const/let create a lexical binding in global
