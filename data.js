@@ -185,7 +185,7 @@ const T = {
   mic_err:["Ovozli kiritişni işga tuşirib bölmadi","Не удалось запустить голосовой ввод","Could not start voice input"],
   mic_https:["Ovoz uçun HTTPS kerak — https havola orqali oçing","Для голоса нужен HTTPS — откройте по https-ссылке","Voice needs HTTPS — open via the https link"],
   mic_transcribing:["Matnga ögiryapman…","Распознаю…","Transcribing…"],
-  attach_bad:["Bu fayl turi qöllab-quvvatlanmaydi","Этот тип файла не поддерживается","This file type is not supported"],
+  attach_bad:["Faylni öqib bölmadi — qayta urinib köring","Не удалось прочитать файл — попробуйте ещё раз","The file could not be read — please try again"],
   chat_ph:["Savolingizni yozing…","Напишите ваш вопрос…","Type your question…"],
   future_eyebrow:["Kelajakdagi rivojlaniş","Будущее развитие","Future development"],
   future_h2:["Version <span class=\"grad\">2.0</span>","Version <span class=\"grad\">2.0</span>","Version <span class=\"grad\">2.0</span>"],

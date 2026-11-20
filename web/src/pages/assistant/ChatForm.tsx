@@ -15,7 +15,6 @@ type ChatFormProps = {
   onMic: () => void;
 };
 
-const ACCEPTED_FILES = "image/*,.txt,.md,.csv,.json,.log,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx";
 const LINE_ICON = {
   viewBox: "0 0 24 24",
   width: 20,
@@ -57,10 +56,10 @@ export function ChatForm(props: ChatFormProps) {
           <path d="M21 12.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l9-9a3.3 3.3 0 0 1 4.7 4.7l-9 9a1.6 1.6 0 0 1-2.3-2.3l8.3-8.3" />
         </svg>
       </button>
+      {/* No accept list: the server reads any file type (readAttachment.ts). */}
       <input
         type="file"
         id="fileInput"
-        accept={ACCEPTED_FILES}
         hidden
         ref={fileRef}
         onChange={event => {
